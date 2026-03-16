@@ -11,6 +11,7 @@ const CreateExam = ({ user, onLogout, addExam }) => {
   const [totalQuestions, setTotalQuestions] = useState(10);
   const [optionsCount, setOptionsCount] = useState(4);
   const [duration, setDuration] = useState(60);
+  const [deadline, setDeadline] = useState('');
   const [pdfFile, setPdfFile] = useState(null);
   const [pdfFileName, setPdfFileName] = useState('');
   const [success, setSuccess] = useState('');
@@ -38,7 +39,7 @@ const CreateExam = ({ user, onLogout, addExam }) => {
   const generateCode = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let code = '';
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 6; i++) {
       code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     setExamCode(code);
@@ -50,22 +51,24 @@ const CreateExam = ({ user, onLogout, addExam }) => {
     setSuccess('');
 
     if (!title.trim()) { setError('Please enter exam title.'); return; }
-    if (!examCode.trim()) { setError('Please enter or generate an exam code.'); return; }
+    if (!examCode) { setError('Please generate an exam code by clicking the Generate button.'); return; }
     if (!pdfFile) { setError('Please upload a PDF question paper.'); return; }
     if (totalQuestions < 1) { setError('Number of questions must be at least 1.'); return; }
     if (duration < 1) { setError('Duration must be at least 1 minute.'); return; }
+    if (!deadline) { setError('Please set a deadline for the exam.'); return; }
 
     const pdfUrl = URL.createObjectURL(pdfFile);
 
     const newExam = {
       id: Date.now(),
       title: title.trim(),
-      examCode: examCode.trim().toUpperCase(),
+      examCode: examCode,
       pdfUrl: pdfUrl,
       pdfFileName: pdfFileName,
       totalQuestions: parseInt(totalQuestions),
       optionsCount: parseInt(optionsCount),
       duration: parseInt(duration),
+      deadline: deadline,
       status: 'Active',
       createdAt: new Date().toISOString(),
     };
@@ -73,25 +76,33 @@ const CreateExam = ({ user, onLogout, addExam }) => {
     addExam(newExam);
     setSuccess(`Exam "${newExam.title}" created successfully! Code: ${newExam.examCode}`);
 
-    // Reset form
     setTitle('');
     setExamCode('');
     setTotalQuestions(10);
     setOptionsCount(4);
     setDuration(60);
+    setDeadline('');
     setPdfFile(null);
     setPdfFileName('');
 
-    // Reset file input
     const fileInput = document.getElementById('pdf-upload');
     if (fileInput) fileInput.value = '';
+  };
+
+  const getOptionsLabel = () => {
+    switch (parseInt(optionsCount)) {
+      case 2: return 'True / False';
+      case 3: return 'A, B, C';
+      case 4: return 'A, B, C, D';
+      case 5: return 'A, B, C, D, E';
+      default: return '';
+    }
   };
 
   return (
     <div style={{ display: 'flex' }}>
       <AdminSidebar active="create" onLogout={handleLogout} />
       <div className="dashboard-main">
-        {/* Topbar */}
         <div className="dashboard-topbar">
           <h3>Create New Exam</h3>
           <div className="user-info">
@@ -103,17 +114,13 @@ const CreateExam = ({ user, onLogout, addExam }) => {
           </div>
         </div>
 
-        {/* Form Card */}
         <div className="create-exam-card">
           {success && (
             <Alert variant="success" style={{ borderRadius: 12, fontWeight: 600 }} dismissible onClose={() => setSuccess('')}>
               ✅ {success}
               <div style={{ marginTop: 8 }}>
-                <Button
-                  variant="success" size="sm"
-                  style={{ borderRadius: 8, fontWeight: 600 }}
-                  onClick={() => navigate('/admin')}
-                >
+                <Button variant="success" size="sm" style={{ borderRadius: 8, fontWeight: 600 }}
+                  onClick={() => navigate('/admin')}>
                   View All Exams
                 </Button>
               </div>
@@ -140,26 +147,42 @@ const CreateExam = ({ user, onLogout, addExam }) => {
                 </Form.Group>
               </Col>
 
-              {/* Exam Code */}
+              {/* Exam Code — Generate Only */}
               <Col md={4}>
                 <Form.Group>
                   <Form.Label className="form-label-custom">Exam Code *</Form.Label>
-                  <div className="d-flex gap-2">
-                    <Form.Control
-                      type="text" placeholder="e.g. OS2025"
-                      value={examCode} onChange={(e) => setExamCode(e.target.value.toUpperCase())}
-                      className="form-input-custom" maxLength={12}
-                      style={{ letterSpacing: 2, fontWeight: 700, textTransform: 'uppercase' }}
-                    />
-                    <Button
-                      variant="outline-primary" onClick={generateCode}
-                      style={{ borderRadius: 10, fontWeight: 600, whiteSpace: 'nowrap' }}
+                  <div className="d-flex gap-2 align-items-center">
+                    <div
+                      className="generated-code-display"
+                      style={{
+                        flex: 1,
+                        padding: '12px 16px',
+                        background: examCode ? '#e8f5e9' : '#f5f5f5',
+                        borderRadius: 10,
+                        border: `2px solid ${examCode ? '#4caf50' : '#ddd'}`,
+                        fontFamily: 'monospace',
+                        fontWeight: 700,
+                        fontSize: 18,
+                        letterSpacing: 3,
+                        textAlign: 'center',
+                        color: examCode ? '#1a1a2e' : '#bbb',
+                        minHeight: 48,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
                     >
-                      Generate
+                      {examCode || '------'}
+                    </div>
+                    <Button
+                      variant="primary" onClick={generateCode}
+                      style={{ borderRadius: 10, fontWeight: 600, whiteSpace: 'nowrap', padding: '12px 20px' }}
+                    >
+                      🔄 Generate
                     </Button>
                   </div>
                   <Form.Text style={{ color: '#888', fontSize: 11 }}>
-                    Students will enter this code to access the exam
+                    Click Generate to create a unique exam code
                   </Form.Text>
                 </Form.Group>
               </Col>
@@ -169,11 +192,8 @@ const CreateExam = ({ user, onLogout, addExam }) => {
                 <Form.Group>
                   <Form.Label className="form-label-custom">Upload Question Paper (PDF) *</Form.Label>
                   <div className="pdf-upload-zone">
-                    <input
-                      type="file" id="pdf-upload" accept=".pdf"
-                      onChange={handleFileChange}
-                      style={{ display: 'none' }}
-                    />
+                    <input type="file" id="pdf-upload" accept=".pdf"
+                      onChange={handleFileChange} style={{ display: 'none' }} />
                     <label htmlFor="pdf-upload" className="pdf-upload-label">
                       {pdfFileName ? (
                         <div className="pdf-uploaded-info">
@@ -188,12 +208,8 @@ const CreateExam = ({ user, onLogout, addExam }) => {
                       ) : (
                         <div className="pdf-upload-placeholder">
                           <span style={{ fontSize: 48 }}>📤</span>
-                          <div style={{ fontWeight: 700, color: '#1a1a2e', marginTop: 8 }}>
-                            Click to upload PDF
-                          </div>
-                          <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
-                            Max file size: 10MB
-                          </div>
+                          <div style={{ fontWeight: 700, color: '#1a1a2e', marginTop: 8 }}>Click to upload PDF</div>
+                          <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>Max file size: 10MB</div>
                         </div>
                       )}
                     </label>
@@ -202,7 +218,7 @@ const CreateExam = ({ user, onLogout, addExam }) => {
               </Col>
 
               {/* Number of Questions */}
-              <Col md={4}>
+              <Col md={3}>
                 <Form.Group>
                   <Form.Label className="form-label-custom">Number of Questions *</Form.Label>
                   <Form.Control
@@ -214,23 +230,23 @@ const CreateExam = ({ user, onLogout, addExam }) => {
               </Col>
 
               {/* Options per Question */}
-              <Col md={4}>
+              <Col md={3}>
                 <Form.Group>
-                  <Form.Label className="form-label-custom">Options per Question</Form.Label>
+                  <Form.Label className="form-label-custom">Options per Question *</Form.Label>
                   <Form.Select
                     value={optionsCount} onChange={(e) => setOptionsCount(e.target.value)}
                     className="form-input-custom"
                   >
-                    <option value={2}>2 (A, B)</option>
-                    <option value={3}>3 (A, B, C)</option>
-                    <option value={4}>4 (A, B, C, D)</option>
-                    <option value={5}>5 (A, B, C, D, E)</option>
+                    <option value={2}>2 — True / False</option>
+                    <option value={3}>3 — A, B, C</option>
+                    <option value={4}>4 — A, B, C, D</option>
+                    <option value={5}>5 — A, B, C, D, E</option>
                   </Form.Select>
                 </Form.Group>
               </Col>
 
               {/* Duration */}
-              <Col md={4}>
+              <Col md={3}>
                 <Form.Group>
                   <Form.Label className="form-label-custom">Duration (minutes) *</Form.Label>
                   <Form.Control
@@ -241,18 +257,33 @@ const CreateExam = ({ user, onLogout, addExam }) => {
                 </Form.Group>
               </Col>
 
-              {/* Preview Summary */}
+              {/* Deadline */}
+              <Col md={3}>
+                <Form.Group>
+                  <Form.Label className="form-label-custom">Exam Deadline *</Form.Label>
+                  <Form.Control
+                    type="datetime-local"
+                    value={deadline} onChange={(e) => setDeadline(e.target.value)}
+                    className="form-input-custom"
+                  />
+                  <Form.Text style={{ color: '#888', fontSize: 11 }}>
+                    Exam will expire after this time
+                  </Form.Text>
+                </Form.Group>
+              </Col>
+
+              {/* Preview */}
               <Col md={12}>
                 <div className="exam-preview-box">
                   <h6 style={{ fontWeight: 700, marginBottom: 12 }}>📋 Exam Summary Preview</h6>
                   <Row>
-                    <Col sm={3}>
+                    <Col sm={2}>
                       <div className="preview-item">
                         <div className="preview-value">{title || '—'}</div>
                         <div className="preview-label">Title</div>
                       </div>
                     </Col>
-                    <Col sm={3}>
+                    <Col sm={2}>
                       <div className="preview-item">
                         <div className="preview-value" style={{ fontFamily: 'monospace', letterSpacing: 2 }}>
                           {examCode || '—'}
@@ -268,14 +299,22 @@ const CreateExam = ({ user, onLogout, addExam }) => {
                     </Col>
                     <Col sm={2}>
                       <div className="preview-item">
-                        <div className="preview-value">{optionsCount} Opts</div>
-                        <div className="preview-label">Per Question</div>
+                        <div className="preview-value">{getOptionsLabel()}</div>
+                        <div className="preview-label">Options</div>
                       </div>
                     </Col>
                     <Col sm={2}>
                       <div className="preview-item">
                         <div className="preview-value">{duration} min</div>
                         <div className="preview-label">Duration</div>
+                      </div>
+                    </Col>
+                    <Col sm={2}>
+                      <div className="preview-item">
+                        <div className="preview-value" style={{ fontSize: 12 }}>
+                          {deadline ? new Date(deadline).toLocaleDateString() : '—'}
+                        </div>
+                        <div className="preview-label">Deadline</div>
                       </div>
                     </Col>
                   </Row>
@@ -285,21 +324,14 @@ const CreateExam = ({ user, onLogout, addExam }) => {
               {/* Submit */}
               <Col md={12}>
                 <div className="d-flex gap-3">
-                  <Button
-                    type="submit"
-                    style={{
-                      background: 'linear-gradient(135deg, #1a1a2e, #2c5364)',
-                      border: 'none', borderRadius: 12, padding: '14px 40px',
-                      fontWeight: 700, fontSize: 16,
-                    }}
-                  >
+                  <Button type="submit" style={{
+                    background: 'linear-gradient(135deg, #1a1a2e, #2c5364)',
+                    border: 'none', borderRadius: 12, padding: '14px 40px', fontWeight: 700, fontSize: 16,
+                  }}>
                     ✅ Create Exam
                   </Button>
-                  <Button
-                    variant="outline-secondary"
-                    onClick={() => navigate('/admin')}
-                    style={{ borderRadius: 12, padding: '14px 28px', fontWeight: 600 }}
-                  >
+                  <Button variant="outline-secondary" onClick={() => navigate('/admin')}
+                    style={{ borderRadius: 12, padding: '14px 28px', fontWeight: 600 }}>
                     Cancel
                   </Button>
                 </div>

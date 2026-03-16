@@ -1038,3 +1038,460 @@ body {
   .pdf-iframe { min-height: 60vh; }
   .pdf-viewer-container { min-height: auto; }
 }
+/* ═══════════════════════════════════════
+   SHOW PASSWORD TOGGLE
+   ═══════════════════════════════════════ */
+.password-input-wrapper {
+  position: relative;
+}
+
+.password-input-wrapper .form-control {
+  padding-right: 48px;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.password-toggle-btn:hover {
+  opacity: 1;
+}
+
+/* ═══════════════════════════════════════
+   WELCOME SECTION (STUDENT DASHBOARD)
+   ═══════════════════════════════════════ */
+.welcome-section {
+  margin-top: 8px;
+}
+
+.welcome-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 40px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid #eee;
+  text-align: center;
+}
+
+.welcome-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.welcome-card h4 {
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 8px;
+}
+
+.welcome-card p {
+  color: #888;
+  font-size: 14px;
+  max-width: 500px;
+  margin: 0 auto 24px;
+  line-height: 1.6;
+}
+
+.welcome-info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.welcome-info-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f8f9fa;
+  padding: 12px 20px;
+  border-radius: 10px;
+  text-align: left;
+  font-size: 14px;
+  color: #555;
+}
+
+.welcome-info-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════
+   EXPIRED EXAM CARD STYLE
+   ═══════════════════════════════════════ */
+.exam-card-expired {
+  opacity: 0.6;
+  border-color: #ddd;
+}
+
+.exam-card-expired:hover {
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+/* ═══════════════════════════════════════
+   OMR INFO TEXT
+   ═══════════════════════════════════════ */
+.omr-info-text {
+  font-size: 11px;
+  color: #888;
+  margin-bottom: 12px;
+  padding: 6px 12px;
+  background: #fff8e1;
+  border-radius: 8px;
+  text-align: center;
+  border: 1px solid #ffe082;
+}
+
+/* ═══════════════════════════════════════
+   OMR WITHOUT CLEAR COLUMN
+   ═══════════════════════════════════════ */
+.omr-col-options-full {
+  flex: 1;
+  display: flex;
+  justify-content: space-around;
+}
+
+.omr-col-options-full span {
+  width: 40px;
+  text-align: center;
+}
+
+.omr-options-full {
+  flex: 1;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+/* ═══════════════════════════════════════
+   GENERATED CODE DISPLAY
+   ═══════════════════════════════════════ */
+.generated-code-display {
+  user-select: all;
+}
+
+/* ═══════════════════════════════════════
+   QUESTION DISPLAY (LEFT PANEL)
+   ═══════════════════════════════════════ */
+.question-number-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1a1a2e, #2c5364);
+  color: #fff;
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+.question-options-display {
+  margin-top: 8px;
+  margin-bottom: 24px;
+}
+
+.option-display-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border: 1.5px solid #e8e8e8;
+}
+
+.option-display-label {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #e3e3e3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #555;
+  margin-right: 14px;
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+.option-display-text {
+  font-size: 14px;
+  color: #444;
+  line-height: 1.5;
+}
+
+/* ═══════════════════════════════════════
+   PDF VIEWER
+   ═══════════════════════════════════════ */
+.pdf-viewer-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: calc(100vh - 64px);
+}
+
+.pdf-viewer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  margin-bottom: 12px;
+  border-bottom: 2px solid #f0f0f0;
+  font-weight: 700;
+  color: #1a1a2e;
+  font-size: 14px;
+}
+
+.pdf-iframe {
+  flex: 1;
+  width: 100%;
+  min-height: calc(100vh - 140px);
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  background: #f5f5f5;
+}
+
+/* ═══════════════════════════════════════
+   OMR PANEL
+   ═══════════════════════════════════════ */
+.omr-panel {
+  width: 420px;
+  background: #fafafa;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  border-left: 2px solid #e0e0e0;
+}
+
+.omr-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.omr-header h6 {
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0;
+  font-size: 15px;
+}
+
+.omr-count {
+  background: #e3f2fd;
+  color: #1565c0;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.omr-column-header {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: #e8e8e8;
+  border-radius: 10px 10px 0 0;
+  font-weight: 700;
+  font-size: 12px;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.omr-col-q {
+  width: 50px;
+  text-align: center;
+}
+
+.omr-sheet-container {
+  flex: 1;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+}
+
+.omr-row {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.omr-row:hover { background: #f5f8ff; }
+.omr-row-active { background: #e3f2fd !important; border-left: 3px solid #2196f3; }
+.omr-row-answered { background: #f1f8e9; }
+.omr-row-active.omr-row-answered { background: #e3f2fd !important; }
+
+.omr-q-number {
+  width: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.omr-q-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.omr-q-badge.current { background: #2196f3; color: #fff; }
+.omr-q-badge.answered { background: #4caf50; color: #fff; }
+.omr-q-badge.unanswered { background: #e0e0e0; color: #666; }
+
+.omr-radio-label {
+  cursor: pointer;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.omr-radio-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2.5px solid #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  color: #999;
+  transition: all 0.2s;
+  background: #fff;
+  user-select: none;
+}
+
+.omr-radio-circle:hover {
+  border-color: #2196f3;
+  color: #2196f3;
+  background: #e3f2fd;
+}
+
+.omr-radio-circle.filled {
+  background: #1a1a2e;
+  border-color: #1a1a2e;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(26, 26, 46, 0.3);
+}
+
+/* ═══════════════════════════════════════
+   ADMIN CREATE EXAM FORM
+   ═══════════════════════════════════════ */
+.create-exam-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid #eee;
+}
+
+.form-label-custom {
+  font-weight: 700;
+  font-size: 13px;
+  color: #1a1a2e;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.form-input-custom {
+  border-radius: 10px;
+  padding: 12px 16px;
+  border: 1.5px solid #ddd;
+  transition: border-color 0.3s;
+  font-size: 15px;
+}
+
+.form-input-custom:focus {
+  border-color: #2c5364;
+  box-shadow: 0 0 0 3px rgba(44, 83, 100, 0.15);
+}
+
+.pdf-upload-zone {
+  border: 2.5px dashed #ccc;
+  border-radius: 16px;
+  transition: all 0.3s;
+  background: #fafafa;
+}
+
+.pdf-upload-zone:hover {
+  border-color: #4fc3f7;
+  background: #f0f9ff;
+}
+
+.pdf-upload-label {
+  display: block;
+  padding: 32px;
+  cursor: pointer;
+  text-align: center;
+  width: 100%;
+}
+
+.pdf-uploaded-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: center;
+}
+
+.pdf-upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.exam-preview-box {
+  background: linear-gradient(135deg, #f8f9fa, #e8eaf6);
+  border-radius: 14px;
+  padding: 24px;
+  border: 1px solid #e0e0e0;
+}
+
+.preview-item { text-align: center; padding: 8px; }
+.preview-value { font-size: 16px; font-weight: 700; color: #1a1a2e; margin-bottom: 4px; word-break: break-all; }
+.preview-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* ═══════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════ */
+@media (max-width: 992px) {
+  .omr-panel { width: 360px; }
+  .omr-radio-circle { width: 32px; height: 32px; font-size: 12px; }
+}
+
+@media (max-width: 768px) {
+  .omr-panel { width: 100%; border-left: none; border-top: 2px solid #e0e0e0; }
+  .pdf-iframe { min-height: 60vh; }
+  .pdf-viewer-container { min-height: auto; }
+  .welcome-info-grid { max-width: 100%; }
+}

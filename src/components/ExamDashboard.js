@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Modal } from 'react-bootstrap';
 
-/* ── Legacy question bank (non-PDF exams) ── */
 const QUESTION_BANKS = {
   CS401: {
     title: 'Operating Systems',
@@ -28,7 +27,6 @@ const ExamDashboard = ({ student, customExams = [] }) => {
   const { examCode } = useParams();
   const navigate = useNavigate();
 
-  /* ── Determine exam type ── */
   const legacySubject = LEGACY_CODES[examCode];
   const legacyData = legacySubject ? QUESTION_BANKS[legacySubject] : null;
   const customExam = customExams.find((e) => e.examCode === examCode);
@@ -48,13 +46,7 @@ const ExamDashboard = ({ student, customExams = [] }) => {
   const handleAutoSubmit = useCallback(() => {
     setSubmitted(true);
     navigate('/result', {
-      state: {
-        answers,
-        total: totalQ,
-        attempted: Object.keys(answers).length,
-        examTitle,
-        examCode,
-      },
+      state: { answers, total: totalQ, attempted: Object.keys(answers).length, examTitle, examCode },
     });
     // eslint-disable-next-line
   }, [answers, totalQ]);
@@ -70,7 +62,6 @@ const ExamDashboard = ({ student, customExams = [] }) => {
     return () => clearInterval(timer);
   }, [submitted, legacyData, customExam, handleAutoSubmit]);
 
-  /* ── Guard ── */
   if (!legacyData && !customExam) {
     return (
       <div style={{ textAlign: 'center', padding: 80 }}>
@@ -88,14 +79,17 @@ const ExamDashboard = ({ student, customExams = [] }) => {
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const selectOption = (qIndex, optIndex) => {
-    setAnswers({ ...answers, [qIndex]: optIndex });
-  };
-
-  const clearResponse = (qIndex) => {
-    const updated = { ...answers };
-    delete updated[qIndex];
-    setAnswers(updated);
+  // ── Toggle selection: click to select, re-click to deselect ──
+  const toggleOption = (qIndex, optIndex) => {
+    if (answers[qIndex] === optIndex) {
+      // Re-click same option → deselect
+      const updated = { ...answers };
+      delete updated[qIndex];
+      setAnswers(updated);
+    } else {
+      // Select new option
+      setAnswers({ ...answers, [qIndex]: optIndex });
+    }
   };
 
   const goNext = () => { if (currentQ < totalQ - 1) setCurrentQ(currentQ + 1); };
@@ -108,44 +102,46 @@ const ExamDashboard = ({ student, customExams = [] }) => {
     setShowModal(false);
     setSubmitted(true);
     navigate('/result', {
-      state: {
-        answers, total: totalQ, attempted: attemptedCount,
-        examTitle, examCode,
-      },
+      state: { answers, total: totalQ, attempted: attemptedCount, examTitle, examCode },
     });
   };
 
-  const optionLetters = 'ABCDEFGHIJ';
+  // Option labels based on count
+  const getOptionLabel = (optIdx) => {
+    if (parseInt(optCount) === 2) {
+      return optIdx === 0 ? 'T' : 'F';
+    }
+    return String.fromCharCode(65 + optIdx);
+  };
+
+  const getOptionFullLabel = (optIdx) => {
+    if (parseInt(optCount) === 2) {
+      return optIdx === 0 ? 'True' : 'False';
+    }
+    return String.fromCharCode(65 + optIdx);
+  };
 
   return (
     <div>
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="exam-header-bar">
         <h4>{examCode} — {examTitle}</h4>
       </div>
 
-      {/* ── Body ── */}
+      {/* Body */}
       <div className="exam-body">
 
-        {/* ════════════════════════════════
-            LEFT PANEL
-           ════════════════════════════════ */}
+        {/* ── LEFT PANEL ── */}
         <div className="question-panel">
           {isPdfExam ? (
-            /* ── PDF Viewer ── */
             <div className="pdf-viewer-container">
               <div className="pdf-viewer-header">
                 <span>📄 Question Paper — {examTitle}</span>
                 <span className="q-counter">{attemptedCount} of {totalQ} Answered</span>
               </div>
-              <iframe
-                src={customExam.pdfUrl}
-                title="Question Paper PDF"
-                className="pdf-iframe"
-              />
+              <iframe src={customExam.pdfUrl} title="Question Paper PDF" className="pdf-iframe" />
             </div>
           ) : (
-            /* ── Legacy Question Display ── */
             <>
               <div className="q-header">
                 <h5>Question {currentQ + 1} of {totalQ}</h5>
@@ -156,7 +152,7 @@ const ExamDashboard = ({ student, customExams = [] }) => {
               <div className="question-options-display">
                 {legacyData.questions[currentQ].options.map((opt, idx) => (
                   <div key={idx} className="option-display-item">
-                    <span className="option-display-label">{optionLetters[idx]}</span>
+                    <span className="option-display-label">{getOptionLabel(idx)}</span>
                     <span className="option-display-text">{opt}</span>
                   </div>
                 ))}
@@ -169,9 +165,7 @@ const ExamDashboard = ({ student, customExams = [] }) => {
           )}
         </div>
 
-        {/* ════════════════════════════════
-            RIGHT PANEL — OMR SHEET
-           ════════════════════════════════ */}
+        {/* ── RIGHT PANEL — OMR (No Clear Column) ── */}
         <div className="omr-panel">
           {/* Timer */}
           <div className="timer-box">
@@ -187,18 +181,22 @@ const ExamDashboard = ({ student, customExams = [] }) => {
             <span className="omr-count">{attemptedCount}/{totalQ} Answered</span>
           </div>
 
-          {/* OMR Column Headers */}
-          <div className="omr-column-header">
-            <div className="omr-col-q">Q.No</div>
-            <div className="omr-col-options">
-              {Array.from({ length: optCount }, (_, i) => (
-                <span key={i}>{optionLetters[i]}</span>
-              ))}
-            </div>
-            <div className="omr-col-clear">Clear</div>
+          {/* Info */}
+          <div className="omr-info-text">
+            💡 Click to select. Re-click same option to deselect.
           </div>
 
-          {/* OMR Rows */}
+          {/* OMR Column Headers — No Clear column */}
+          <div className="omr-column-header">
+            <div className="omr-col-q">Q.No</div>
+            <div className="omr-col-options-full">
+              {Array.from({ length: optCount }, (_, i) => (
+                <span key={i}>{getOptionFullLabel(i)}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* OMR Rows — No Clear button */}
           <div className="omr-sheet-container">
             {Array.from({ length: totalQ }, (_, qIdx) => (
               <div
@@ -206,6 +204,7 @@ const ExamDashboard = ({ student, customExams = [] }) => {
                 className={`omr-row ${qIdx === currentQ ? 'omr-row-active' : ''} ${answers[qIdx] !== undefined ? 'omr-row-answered' : ''}`}
                 onClick={() => setCurrentQ(qIdx)}
               >
+                {/* Question Number */}
                 <div className="omr-q-number">
                   <span className={`omr-q-badge ${
                     qIdx === currentQ ? 'current' : answers[qIdx] !== undefined ? 'answered' : 'unanswered'
@@ -214,33 +213,16 @@ const ExamDashboard = ({ student, customExams = [] }) => {
                   </span>
                 </div>
 
-                <div className="omr-options">
+                {/* Radio Bubbles — re-click to deselect */}
+                <div className="omr-options-full">
                   {Array.from({ length: optCount }, (_, optIdx) => (
-                    <label key={optIdx} className="omr-radio-label">
-                      <input
-                        type="radio"
-                        name={`question-${qIdx}`}
-                        className="omr-radio-input"
-                        checked={answers[qIdx] === optIdx}
-                        onChange={() => selectOption(qIdx, optIdx)}
-                      />
+                    <label key={optIdx} className="omr-radio-label"
+                      onClick={(e) => { e.stopPropagation(); toggleOption(qIdx, optIdx); }}>
                       <span className={`omr-radio-circle ${answers[qIdx] === optIdx ? 'filled' : ''}`}>
-                        {optionLetters[optIdx]}
+                        {getOptionLabel(optIdx)}
                       </span>
                     </label>
                   ))}
-                </div>
-
-                <div className="omr-clear-btn-col">
-                  {answers[qIdx] !== undefined && (
-                    <button
-                      className="omr-clear-btn"
-                      onClick={(e) => { e.stopPropagation(); clearResponse(qIdx); }}
-                      title="Clear"
-                    >
-                      ✕
-                    </button>
-                  )}
                 </div>
               </div>
             ))}
@@ -255,14 +237,14 @@ const ExamDashboard = ({ student, customExams = [] }) => {
         </div>
       </div>
 
-      {/* ── Modal ── */}
+      {/* Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)} centered className="modal-confirm">
         <Modal.Header closeButton>
           <Modal.Title style={{ fontWeight: 700, fontSize: 18 }}>Confirm Submission</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <p style={{ color: '#555', marginBottom: 16 }}>
-            Are you sure you want to submit? You cannot change answers after submission.
+            Are you sure? You cannot change answers after submission.
           </p>
           <div className="summary-grid">
             <div className="summary-item"><div className="s-value">{totalQ}</div><div className="s-label">Total</div></div>
@@ -272,8 +254,10 @@ const ExamDashboard = ({ student, customExams = [] }) => {
           </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="outline-secondary" onClick={() => setShowModal(false)} style={{ borderRadius: 10, fontWeight: 600, padding: '8px 24px' }}>Go Back</Button>
-          <Button variant="danger" onClick={confirmSubmit} style={{ borderRadius: 10, fontWeight: 600, padding: '8px 24px' }}>Yes, Submit</Button>
+          <Button variant="outline-secondary" onClick={() => setShowModal(false)}
+            style={{ borderRadius: 10, fontWeight: 600, padding: '8px 24px' }}>Go Back</Button>
+          <Button variant="danger" onClick={confirmSubmit}
+            style={{ borderRadius: 10, fontWeight: 600, padding: '8px 24px' }}>Yes, Submit</Button>
         </Modal.Footer>
       </Modal>
     </div>

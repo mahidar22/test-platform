@@ -71,6 +71,7 @@ const Dashboard = ({ student, onLogout }) => {
           </div>
         </div>
 
+        {/* Stats */}
         <Row className="g-4 mb-4">
           {stats.map((s, i) => (
             <Col md={3} sm={6} key={i}>
@@ -83,24 +84,31 @@ const Dashboard = ({ student, onLogout }) => {
           ))}
         </Row>
 
-        <Row className="g-4">
-          <Col md={6}>
-            <div className="stat-card" style={{ cursor: 'pointer' }} onClick={() => navigate('/exams')}>
-              <h5 style={{ color: '#1a1a2e', fontSize: 16, fontWeight: 700 }}>📝 Go to Exams</h5>
-              <p style={{ color: '#888', fontSize: 14, marginTop: 8, marginBottom: 0 }}>
-                View ongoing, upcoming & past exams. Enter your exam code here.
-              </p>
+        {/* Welcome Message — Replaced GoTo/ViewResults */}
+        <div className="welcome-section">
+          <div className="welcome-card">
+            <div className="welcome-icon">👋</div>
+            <h4>Welcome, {student?.name}!</h4>
+            <p>
+              You are logged in to the Online Examination &amp; Assessment Platform.
+              Use the navigation panel on the left to access your exams and results.
+            </p>
+            <div className="welcome-info-grid">
+              <div className="welcome-info-item">
+                <span className="welcome-info-icon">📝</span>
+                <span>Click <strong>Exams</strong> to view ongoing, past & upcoming exams</span>
+              </div>
+              <div className="welcome-info-item">
+                <span className="welcome-info-icon">📊</span>
+                <span>Click <strong>Results</strong> to check your scores</span>
+              </div>
+              <div className="welcome-info-item">
+                <span className="welcome-info-icon">🔑</span>
+                <span>Enter your <strong>Exam Code</strong> received via email to start an exam</span>
+              </div>
             </div>
-          </Col>
-          <Col md={6}>
-            <div className="stat-card" style={{ cursor: 'pointer' }} onClick={() => navigate('/result')}>
-              <h5 style={{ color: '#1a1a2e', fontSize: 16, fontWeight: 700 }}>📊 View Results</h5>
-              <p style={{ color: '#888', fontSize: 14, marginTop: 8, marginBottom: 0 }}>
-                Check your scores and performance for completed exams.
-              </p>
-            </div>
-          </Col>
-        </Row>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -11,6 +11,7 @@ const VALID_CREDENTIALS = [
 const LoginPage = ({ onLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -72,12 +73,35 @@ const LoginPage = ({ onLogin }) => {
             />
           </Form.Group>
 
-          <Form.Group className="mb-4">
+          <Form.Group className="mb-2">
             <Form.Label style={{ fontWeight: 600, fontSize: 14, color: '#555' }}>Password</Form.Label>
-            <Form.Control
-              type="password" placeholder="Enter your password"
-              value={password} onChange={(e) => setPassword(e.target.value)}
-              required disabled={loading}
+            <div className="password-input-wrapper">
+              <Form.Control
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={loading}
+              />
+              <button
+                type="button"
+                className="password-toggle-btn"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex={-1}
+              >
+                {showPassword ? '🙈' : '👁️'}
+              </button>
+            </div>
+          </Form.Group>
+
+          <Form.Group className="mb-4">
+            <Form.Check
+              type="checkbox"
+              label="Show Password"
+              checked={showPassword}
+              onChange={(e) => setShowPassword(e.target.checked)}
+              style={{ fontSize: 13, color: '#888' }}
             />
           </Form.Group>
 

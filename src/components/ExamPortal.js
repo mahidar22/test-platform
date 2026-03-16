@@ -29,10 +29,17 @@ const ExamPortal = ({ student, onLogout, customExams = [] }) => {
 
   const handleLogout = () => { onLogout(); navigate('/'); };
 
-  // Build valid codes: legacy + custom
+  const now = new Date();
+
+  // Only active custom exams (deadline not passed)
+  const activeCustomExams = customExams.filter((e) => {
+    if (!e.deadline) return true;
+    return new Date(e.deadline) > now;
+  });
+
   const isValidCode = (code) => {
     if (LEGACY_CODES[code]) return true;
-    if (customExams.find((e) => e.examCode === code)) return true;
+    if (activeCustomExams.find((e) => e.examCode === code)) return true;
     return false;
   };
 
@@ -57,11 +64,10 @@ const ExamPortal = ({ student, onLogout, customExams = [] }) => {
     }
   };
 
-  // Add custom exams to ongoing
   const getExamList = () => {
     let list = [...(EXAMS[activeTab] || [])];
     if (activeTab === 'ongoing') {
-      customExams.forEach((ce) => {
+      activeCustomExams.forEach((ce) => {
         list.push({
           id: ce.id,
           title: ce.title,
@@ -124,6 +130,9 @@ const ExamPortal = ({ student, onLogout, customExams = [] }) => {
     );
   };
 
+  // Count ongoing exams
+  const ongoingCount = EXAMS.ongoing.length + activeCustomExams.length;
+
   return (
     <div style={{ display: 'flex' }}>
       <Sidebar active="exams" onLogout={handleLogout} />
@@ -145,7 +154,7 @@ const ExamPortal = ({ student, onLogout, customExams = [] }) => {
           </Nav.Item>
           <Nav.Item className="ms-2">
             <Nav.Link eventKey="ongoing" onClick={() => setActiveTab('ongoing')}>
-              Ongoing Exams<Badge bg="danger" className="ms-2" pill>{EXAMS.ongoing.length + customExams.length}</Badge>
+              Ongoing Exams<Badge bg="danger" className="ms-2" pill>{ongoingCount}</Badge>
             </Nav.Link>
           </Nav.Item>
           <Nav.Item className="ms-2">
@@ -155,32 +164,34 @@ const ExamPortal = ({ student, onLogout, customExams = [] }) => {
 
         {renderExams()}
 
-        {/* Code Entry */}
-        <div className="code-entry-section">
-          <Row className="align-items-center">
-            <Col md={6}>
-              <h5>🔑 Enter Your Exam Code</h5>
-              <p>Eligible students receive a unique exam code via email. Enter it below to start your exam.</p>
-            </Col>
-            <Col md={6}>
-              <Form onSubmit={handleEnterExam}>
-                {codeError && (
-                  <Alert variant="danger" className="py-2" style={{ borderRadius: 10, fontSize: 13 }}>{codeError}</Alert>
-                )}
-                <div className="d-flex gap-2">
-                  <Form.Control
-                    className="code-input flex-grow-1" type="text" placeholder="Enter exam code"
-                    value={examCode} onChange={(e) => setExamCode(e.target.value)} maxLength={12}
-                  />
-                  <Button type="submit" className="btn-enter-exam">Enter →</Button>
-                </div>
-                <small style={{ color: 'rgba(255,255,255,0.4)', marginTop: 8, display: 'block' }}>
-                  Enter the code provided by your admin
-                </small>
-              </Form>
-            </Col>
-          </Row>
-        </div>
+        {/* ── Code Entry — ONLY in Ongoing Tab ── */}
+        {activeTab === 'ongoing' && (
+          <div className="code-entry-section">
+            <Row className="align-items-center">
+              <Col md={6}>
+                <h5>🔑 Enter Your Exam Code</h5>
+                <p>Eligible students receive a unique exam code via email. Enter it below to start your exam.</p>
+              </Col>
+              <Col md={6}>
+                <Form onSubmit={handleEnterExam}>
+                  {codeError && (
+                    <Alert variant="danger" className="py-2" style={{ borderRadius: 10, fontSize: 13 }}>{codeError}</Alert>
+                  )}
+                  <div className="d-flex gap-2">
+                    <Form.Control
+                      className="code-input flex-grow-1" type="text" placeholder="Enter exam code"
+                      value={examCode} onChange={(e) => setExamCode(e.target.value)} maxLength={12}
+                    />
+                    <Button type="submit" className="btn-enter-exam">Enter →</Button>
+                  </div>
+                  <small style={{ color: 'rgba(255,255,255,0.4)', marginTop: 8, display: 'block' }}>
+                    Enter the code provided by your admin
+                  </small>
+                </Form>
+              </Col>
+            </Row>
+          </div>
+        )}
       </div>
     </div>
   );
