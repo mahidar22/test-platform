@@ -3,9 +3,10 @@ import { Form, Button, Alert, Spinner } from 'react-bootstrap';
 
 const VALID_CREDENTIALS = [
   { username: 'admin', password: 'admin123', name: 'Administrator', role: 'admin' },
-  { username: 'student01', password: 'pass123', name: 'Arun Kumar', rollNo: '21CS101', role: 'student' },
-  { username: 'student02', password: 'pass123', name: 'Priya Sharma', rollNo: '21CS102', role: 'student' },
-  { username: 'student03', password: 'pass123', name: 'Rahul Dev', rollNo: '21EC201', role: 'student' },
+  { username: 'student01', password: 'pass123', name: 'mahidar reddy illuri', rollNo: '2475A6102', role: 'student' },
+  { username: 'student02', password: 'pass123', name: 'chackravarthi', rollNo: '23471A6111', role: 'student' },
+  { username: 'student03', password: 'pass123', name: 'saida', rollNo: '23471A6143', role: 'student' },
+  { username: 'student04', password: 'pass123', name: 'narasimha', rollNo: '23471A6133', role: 'student' },
 ];
 
 const LoginPage = ({ onLogin }) => {
@@ -50,7 +51,7 @@ const LoginPage = ({ onLogin }) => {
               marginBottom: 16,
             }}
           >
-            <span style={{ fontSize: 28, color: '#fff' }}>📝</span>
+            <span style={{ fontSize: 22, color: '#fff', fontWeight: 700 }}>EP</span>
           </div>
         </div>
 
@@ -84,14 +85,7 @@ const LoginPage = ({ onLogin }) => {
                 required
                 disabled={loading}
               />
-              <button
-                type="button"
-                className="password-toggle-btn"
-                onClick={() => setShowPassword(!showPassword)}
-                tabIndex={-1}
-              >
-                {showPassword ? '🙈' : '👁️'}
-              </button>
+
             </div>
           </Form.Group>
 
