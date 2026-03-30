@@ -38,7 +38,8 @@ const ExamDashboard = ({ student, customExams = [] }) => {
   const optCount = isPdfExam ? customExam.optionsCount : 4;
   const examDuration = isPdfExam ? customExam.duration * 60 : legacyData?.duration || 0;
 
-  // ── Get the correct answer key ──
+  const isTrueFalse = parseInt(optCount) === 2;
+
   const correctAnswerKey = isPdfExam ? (customExam.answerKey || {}) : (legacyData?.answerKey || {});
 
   const [currentQ, setCurrentQ] = useState(0);
@@ -66,8 +67,7 @@ const ExamDashboard = ({ student, customExams = [] }) => {
   const handleAutoSubmit = useCallback(() => {
     setSubmitted(true);
     navigate('/result', { state: buildResultState() });
-    // eslint-disable-next-line
-  }, [answers, totalQ]);
+  }, [navigate, buildResultState]);
 
   const handleForceSubmit = useCallback(() => {
     setExamTerminated(true);
@@ -78,10 +78,8 @@ const ExamDashboard = ({ student, customExams = [] }) => {
         terminationReason: 'Tab switch limit exceeded (3/3)',
       }),
     });
-    // eslint-disable-next-line
-  }, [answers, totalQ]);
+  }, [navigate, buildResultState]);
 
-  // Tab Switch
   useEffect(() => {
     if (submitted || examTerminated) return;
     const handleVisibilityChange = () => {
@@ -89,12 +87,19 @@ const ExamDashboard = ({ student, customExams = [] }) => {
         setTabSwitchCount((prev) => {
           const newCount = prev + 1;
           if (newCount >= MAX_TAB_SWITCHES) {
-            setWarningMessage(`You have switched tabs ${MAX_TAB_SWITCHES} times. Your exam is now being auto-submitted.`);
+            setWarningMessage(
+              `You have switched tabs ${MAX_TAB_SWITCHES} times. Your exam is now being auto-submitted.`
+            );
             setShowWarningModal(true);
-            setTimeout(() => { setShowWarningModal(false); handleForceSubmit(); }, 3000);
+            setTimeout(() => {
+              setShowWarningModal(false);
+              handleForceSubmit();
+            }, 3000);
           } else {
             const remaining = MAX_TAB_SWITCHES - newCount;
-            setWarningMessage(`WARNING: You switched away from the exam tab!\n\nTab switch ${newCount} of ${MAX_TAB_SWITCHES}.\n\n${remaining} warning${remaining === 1 ? '' : 's'} remaining before auto-submission.`);
+            setWarningMessage(
+              `WARNING: You switched away from the exam tab!\n\nTab switch ${newCount} of ${MAX_TAB_SWITCHES}.\n\n${remaining} warning${remaining === 1 ? '' : 's'} remaining before auto-submission.`
+            );
             setShowWarningModal(true);
           }
           return newCount;
@@ -105,12 +110,15 @@ const ExamDashboard = ({ student, customExams = [] }) => {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [submitted, examTerminated, handleForceSubmit]);
 
-  // Timer
   useEffect(() => {
     if (submitted || examTerminated || (!legacyData && !customExam)) return;
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
-        if (prev <= 1) { clearInterval(timer); handleAutoSubmit(); return 0; }
+        if (prev <= 1) {
+          clearInterval(timer);
+          handleAutoSubmit();
+          return 0;
+        }
         return prev - 1;
       });
     }, 1000);
@@ -122,26 +130,36 @@ const ExamDashboard = ({ student, customExams = [] }) => {
       <div style={{ textAlign: 'center', padding: 80 }}>
         <h3>Exam Not Found</h3>
         <p>The exam code "{examCode}" does not match any available exam.</p>
-        <Button variant="primary" onClick={() => navigate('/exams')}>Back to Exams</Button>
+        <Button variant="primary" onClick={() => navigate('/exams')}>
+          Back to Exams
+        </Button>
       </div>
     );
   }
 
   const formatTime = (s) => {
-    const h = Math.floor(s / 3600); const m = Math.floor((s % 3600) / 60); const sec = s % 60;
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
   };
 
   const toggleOption = (qIndex, optIndex) => {
     if (answers[qIndex] === optIndex) {
-      const updated = { ...answers }; delete updated[qIndex]; setAnswers(updated);
+      const updated = { ...answers };
+      delete updated[qIndex];
+      setAnswers(updated);
     } else {
       setAnswers({ ...answers, [qIndex]: optIndex });
     }
   };
 
-  const goNext = () => { if (currentQ < totalQ - 1) setCurrentQ(currentQ + 1); };
-  const goPrev = () => { if (currentQ > 0) setCurrentQ(currentQ - 1); };
+  const goNext = () => {
+    if (currentQ < totalQ - 1) setCurrentQ(currentQ + 1);
+  };
+  const goPrev = () => {
+    if (currentQ > 0) setCurrentQ(currentQ - 1);
+  };
 
   const attemptedCount = Object.keys(answers).length;
   const unanswered = totalQ - attemptedCount;
@@ -153,11 +171,12 @@ const ExamDashboard = ({ student, customExams = [] }) => {
   };
 
   const getOptionLabel = (optIdx) => {
-    if (parseInt(optCount) === 2) return optIdx === 0 ? 'T' : 'F';
+    if (isTrueFalse) return optIdx === 0 ? 'T' : 'F';
     return String.fromCharCode(65 + optIdx);
   };
+
   const getOptionFullLabel = (optIdx) => {
-    if (parseInt(optCount) === 2) return optIdx === 0 ? 'True' : 'False';
+    if (isTrueFalse) return optIdx === 0 ? 'True' : 'False';
     return String.fromCharCode(65 + optIdx);
   };
 
@@ -168,8 +187,40 @@ const ExamDashboard = ({ student, customExams = [] }) => {
     return 'transparent';
   };
 
+  const renderQuestionOptions = () => {
+    if (!legacyData) return null;
+    const opts = legacyData.questions[currentQ].options;
+
+    if (isTrueFalse) {
+      return (
+        <div className="question-options-display">
+          {opts.map((opt, idx) => (
+            <div key={idx} className="tf-option-item">
+              <span className={`tf-option-badge ${idx === 0 ? 'tf-badge-true' : 'tf-badge-false'}`}>
+                {idx === 0 ? 'T' : 'F'}
+              </span>
+              <span className="tf-option-text">{opt}</span>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <div className="question-options-display">
+        {opts.map((opt, idx) => (
+          <div key={idx} className="option-display-item">
+            <span className="option-display-label">{getOptionLabel(idx)}</span>
+            <span className="option-display-text">{opt}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
-    <div>
+    <div style={{ height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      {/* Header Bar */}
       <div className="exam-header-bar">
         <h4>{examCode} — {examTitle}</h4>
         {tabSwitchCount > 0 && (
@@ -180,6 +231,7 @@ const ExamDashboard = ({ student, customExams = [] }) => {
       </div>
 
       <div className="exam-body">
+        {/* Question Panel (Left) */}
         <div className="question-panel">
           {isPdfExam ? (
             <div className="pdf-viewer-container">
@@ -197,64 +249,84 @@ const ExamDashboard = ({ student, customExams = [] }) => {
               </div>
               <div className="question-number-badge">Q{currentQ + 1}</div>
               <div className="question-text">{legacyData.questions[currentQ].text}</div>
-              <div className="question-options-display">
-                {legacyData.questions[currentQ].options.map((opt, idx) => (
-                  <div key={idx} className="option-display-item">
-                    <span className="option-display-label">{getOptionLabel(idx)}</span>
-                    <span className="option-display-text">{opt}</span>
-                  </div>
-                ))}
-              </div>
+              {renderQuestionOptions()}
               <div className="question-nav-btns">
-                <button className="btn-q-nav btn-prev" onClick={goPrev} disabled={currentQ === 0}>← Previous</button>
-                <button className="btn-q-nav btn-next" onClick={goNext} disabled={currentQ === totalQ - 1}>Next →</button>
+                <button className="btn-q-nav btn-prev" onClick={goPrev} disabled={currentQ === 0}>
+                  ← Previous
+                </button>
+                <button className="btn-q-nav btn-next" onClick={goNext} disabled={currentQ === totalQ - 1}>
+                  Next →
+                </button>
               </div>
             </>
           )}
         </div>
 
+        {/* OMR Panel (Right) */}
         <div className="omr-panel">
+          {/* Timer */}
           <div className="timer-box">
             <div className="timer-label">Time Remaining</div>
-            <div className={`timer-value ${timeLeft < 300 ? 'timer-warning' : ''}`}>{formatTime(timeLeft)}</div>
+            <div className={`timer-value ${timeLeft < 300 ? 'timer-warning' : ''}`}>
+              {formatTime(timeLeft)}
+            </div>
           </div>
 
+          {/* Tab Switch Warning */}
           {tabSwitchCount > 0 && (
             <div className={`tab-warning-bar ${tabSwitchCount >= 2 ? 'critical' : ''}`}>
               <div className="tab-warning-icon">!</div>
               <div className="tab-warning-text">
-                <strong>Tab Switches: {tabSwitchCount}/{MAX_TAB_SWITCHES}</strong><br />
+                <strong>Tab Switches: {tabSwitchCount}/{MAX_TAB_SWITCHES}</strong>
+                <br />
                 <span>{MAX_TAB_SWITCHES - tabSwitchCount} remaining before auto-submit</span>
               </div>
             </div>
           )}
 
+          {/* OMR Header */}
           <div className="omr-header">
             <h6>OMR Answer Sheet</h6>
             <span className="omr-count">{attemptedCount}/{totalQ} Answered</span>
           </div>
           <div className="omr-info-text">Click to select. Re-click same option to deselect.</div>
 
+          {/* OMR Column Header */}
           <div className="omr-column-header">
             <div className="omr-col-q">Q.No</div>
             <div className="omr-col-options-full">
-              {Array.from({ length: optCount }, (_, i) => (<span key={i}>{getOptionFullLabel(i)}</span>))}
+              {Array.from({ length: parseInt(optCount) }, (_, i) => (
+                <span key={i}>{getOptionFullLabel(i)}</span>
+              ))}
             </div>
           </div>
 
+          {/* OMR Sheet */}
           <div className="omr-sheet-container">
             {Array.from({ length: totalQ }, (_, qIdx) => (
-              <div key={qIdx}
+              <div
+                key={qIdx}
                 className={`omr-row ${qIdx === currentQ ? 'omr-row-active' : ''} ${answers[qIdx] !== undefined ? 'omr-row-answered' : ''}`}
-                onClick={() => setCurrentQ(qIdx)}>
+                onClick={() => setCurrentQ(qIdx)}
+              >
                 <div className="omr-q-number">
-                  <span className={`omr-q-badge ${qIdx === currentQ ? 'current' : answers[qIdx] !== undefined ? 'answered' : 'unanswered'}`}>{qIdx + 1}</span>
+                  <span className={`omr-q-badge ${qIdx === currentQ ? 'current' : answers[qIdx] !== undefined ? 'answered' : 'unanswered'}`}>
+                    {qIdx + 1}
+                  </span>
                 </div>
                 <div className="omr-options-full">
-                  {Array.from({ length: optCount }, (_, optIdx) => (
-                    <label key={optIdx} className="omr-radio-label"
-                      onClick={(e) => { e.stopPropagation(); toggleOption(qIdx, optIdx); }}>
-                      <span className={`omr-radio-circle ${answers[qIdx] === optIdx ? 'filled' : ''}`}>{getOptionLabel(optIdx)}</span>
+                  {Array.from({ length: parseInt(optCount) }, (_, optIdx) => (
+                    <label
+                      key={optIdx}
+                      className="omr-radio-label"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleOption(qIdx, optIdx);
+                      }}
+                    >
+                      <span className={`omr-radio-circle ${answers[qIdx] === optIdx ? 'filled' : ''}`}>
+                        {getOptionLabel(optIdx)}
+                      </span>
                     </label>
                   ))}
                 </div>
@@ -262,57 +334,129 @@ const ExamDashboard = ({ student, customExams = [] }) => {
             ))}
           </div>
 
+          {/* Submit Button */}
           <div className="submit-section">
-            <Button className="btn-submit-exam" onClick={() => setShowModal(true)}>Submit Exam</Button>
+            <Button className="btn-submit-exam" onClick={() => setShowModal(true)}>
+              Submit Exam
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* Submit Modal */}
+      {/* ══════ Submit Confirmation Modal ══════ */}
       <Modal show={showModal} onHide={() => setShowModal(false)} centered className="modal-confirm">
-        <Modal.Header closeButton><Modal.Title style={{ fontWeight: 700, fontSize: 18 }}>Confirm Submission</Modal.Title></Modal.Header>
+        <Modal.Header closeButton>
+          <Modal.Title style={{ fontWeight: 700, fontSize: 18 }}>Confirm Submission</Modal.Title>
+        </Modal.Header>
         <Modal.Body>
-          <p style={{ color: '#555', marginBottom: 16 }}>Are you sure? You cannot change answers after submission.</p>
+          <p style={{ color: '#555', marginBottom: 16 }}>
+            Are you sure? You cannot change answers after submission.
+          </p>
           <div className="summary-grid">
-            <div className="summary-item"><div className="s-value">{totalQ}</div><div className="s-label">Total</div></div>
-            <div className="summary-item"><div className="s-value" style={{ color: '#4caf50' }}>{attemptedCount}</div><div className="s-label">Attempted</div></div>
-            <div className="summary-item"><div className="s-value" style={{ color: '#e53935' }}>{unanswered}</div><div className="s-label">Unanswered</div></div>
-            <div className="summary-item"><div className="s-value" style={{ color: '#1565c0' }}>{Math.round((attemptedCount / totalQ) * 100)}%</div><div className="s-label">Progress</div></div>
+            <div className="summary-item">
+              <div className="s-value">{totalQ}</div>
+              <div className="s-label">Total</div>
+            </div>
+            <div className="summary-item">
+              <div className="s-value" style={{ color: '#4caf50' }}>{attemptedCount}</div>
+              <div className="s-label">Attempted</div>
+            </div>
+            <div className="summary-item">
+              <div className="s-value" style={{ color: '#e53935' }}>{unanswered}</div>
+              <div className="s-label">Unanswered</div>
+            </div>
+            <div className="summary-item">
+              <div className="s-value" style={{ color: '#7B1FA2' }}>
+                {Math.round((attemptedCount / totalQ) * 100)}%
+              </div>
+              <div className="s-label">Progress</div>
+            </div>
           </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="outline-secondary" onClick={() => setShowModal(false)} style={{ borderRadius: 10, fontWeight: 600, padding: '8px 24px' }}>Go Back</Button>
-          <Button variant="danger" onClick={confirmSubmit} style={{ borderRadius: 10, fontWeight: 600, padding: '8px 24px' }}>Yes, Submit</Button>
+          <Button
+            variant="outline-secondary"
+            onClick={() => setShowModal(false)}
+            style={{ borderRadius: 10, fontWeight: 600, padding: '8px 24px' }}
+          >
+            Go Back
+          </Button>
+          <Button
+            variant="danger"
+            onClick={confirmSubmit}
+            style={{ borderRadius: 10, fontWeight: 600, padding: '8px 24px' }}
+          >
+            Yes, Submit
+          </Button>
         </Modal.Footer>
       </Modal>
 
-      {/* Tab Warning Modal */}
-      <Modal show={showWarningModal} onHide={() => { if (tabSwitchCount < MAX_TAB_SWITCHES) setShowWarningModal(false); }}
-        centered backdrop="static" keyboard={false} className="modal-warning">
+      {/* ══════ Tab Warning Modal ══════ */}
+      <Modal
+        show={showWarningModal}
+        onHide={() => {
+          if (tabSwitchCount < MAX_TAB_SWITCHES) setShowWarningModal(false);
+        }}
+        centered
+        backdrop="static"
+        keyboard={false}
+        className="modal-warning"
+      >
         <Modal.Body style={{ padding: 0 }}>
           <div className={`warning-modal-content ${tabSwitchCount >= MAX_TAB_SWITCHES ? 'terminated' : ''}`}>
             <div className="warning-icon-container">
               {tabSwitchCount >= MAX_TAB_SWITCHES ? (
-                <svg width="72" height="72" viewBox="0 0 72 72" fill="none"><circle cx="36" cy="36" r="34" stroke="#e53935" strokeWidth="3" fill="#ffebee"/><path d="M24 24L48 48M48 24L24 48" stroke="#e53935" strokeWidth="4" strokeLinecap="round"/></svg>
+                <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+                  <circle cx="36" cy="36" r="34" stroke="#e53935" strokeWidth="3" fill="#ffebee" />
+                  <path d="M24 24L48 48M48 24L24 48" stroke="#e53935" strokeWidth="4" strokeLinecap="round" />
+                </svg>
               ) : (
-                <svg width="72" height="72" viewBox="0 0 72 72" fill="none"><path d="M36 6L66 60H6L36 6Z" stroke="#ff9800" strokeWidth="3" fill="#fff8e1"/><text x="36" y="48" textAnchor="middle" fontSize="28" fontWeight="bold" fill="#ff9800">!</text></svg>
+                <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+                  <path d="M36 6L66 60H6L36 6Z" stroke="#ff9800" strokeWidth="3" fill="#fff8e1" />
+                  <text x="36" y="48" textAnchor="middle" fontSize="28" fontWeight="bold" fill="#ff9800">!</text>
+                </svg>
               )}
             </div>
-            <h4 className="warning-title">{tabSwitchCount >= MAX_TAB_SWITCHES ? 'Exam Terminated!' : 'Warning: Tab Switch Detected!'}</h4>
+            <h4 className="warning-title">
+              {tabSwitchCount >= MAX_TAB_SWITCHES
+                ? 'Exam Terminated!'
+                : 'Warning: Tab Switch Detected!'}
+            </h4>
             <p className="warning-message">{warningMessage}</p>
             <div className="warning-dots">
               {Array.from({ length: MAX_TAB_SWITCHES }, (_, i) => (
-                <div key={i} className={`warning-dot ${i < tabSwitchCount ? 'active' : ''} ${i < tabSwitchCount && tabSwitchCount >= MAX_TAB_SWITCHES ? 'terminated' : ''}`}>{i + 1}</div>
+                <div
+                  key={i}
+                  className={`warning-dot ${i < tabSwitchCount ? 'active' : ''} ${
+                    i < tabSwitchCount && tabSwitchCount >= MAX_TAB_SWITCHES ? 'terminated' : ''
+                  }`}
+                >
+                  {i + 1}
+                </div>
               ))}
             </div>
             <div className="warning-level">
-              {tabSwitchCount >= MAX_TAB_SWITCHES ? <span className="level-critical">EXAM AUTO-SUBMITTING...</span>
-                : tabSwitchCount === 2 ? <span className="level-high">FINAL WARNING - Last chance!</span>
-                : <span className="level-low">Please stay on the exam tab</span>}
+              {tabSwitchCount >= MAX_TAB_SWITCHES ? (
+                <span className="level-critical">EXAM AUTO-SUBMITTING...</span>
+              ) : tabSwitchCount === 2 ? (
+                <span className="level-high">FINAL WARNING - Last chance!</span>
+              ) : (
+                <span className="level-low">Please stay on the exam tab</span>
+              )}
             </div>
             {tabSwitchCount < MAX_TAB_SWITCHES && (
-              <Button variant="dark" onClick={() => setShowWarningModal(false)}
-                style={{ borderRadius: 10, fontWeight: 700, padding: '12px 40px', marginTop: 16, fontSize: 16 }}>
+              <Button
+                onClick={() => setShowWarningModal(false)}
+                style={{
+                  borderRadius: 10,
+                  fontWeight: 700,
+                  padding: '12px 40px',
+                  marginTop: 16,
+                  fontSize: 16,
+                  background: '#5B0A7B',
+                  border: 'none',
+                }}
+              >
                 I Understand — Continue Exam
               </Button>
             )}

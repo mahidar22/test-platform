@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Row, Col, Nav, Form, Button, Badge, Alert, Modal } from 'react-bootstrap';
-import { Sidebar } from './Dashboard';
+import Sidebar from './Sidebar';
 
 var EXAMS = {
   past: [
@@ -57,7 +57,6 @@ var ExamPortal = function (props) {
     navigate('/');
   };
 
-  // Get active custom exams - deadline not passed
   var getActiveCustomExams = function () {
     var currentTime = new Date();
     return customExams.filter(function (e) {
@@ -68,7 +67,6 @@ var ExamPortal = function (props) {
 
   var activeCustomExams = getActiveCustomExams();
 
-  // Reminder check
   useEffect(function () {
     var checkReminders = function () {
       var currentTime = new Date();
@@ -76,23 +74,16 @@ var ExamPortal = function (props) {
         if (!e.deadline) return false;
         return new Date(e.deadline) > currentTime;
       });
-
       var expiringSoon = activeExams.filter(function (exam) {
         var deadlineTime = new Date(exam.deadline);
         var timeRemaining = deadlineTime - currentTime;
-        return (
-          timeRemaining > 0 &&
-          timeRemaining <= 30 * 60 * 1000 &&
-          !dismissedReminders.has(exam.examCode)
-        );
+        return (timeRemaining > 0 && timeRemaining <= 30 * 60 * 1000 && !dismissedReminders.has(exam.examCode));
       });
-
       if (expiringSoon.length > 0) {
         setReminderExams(expiringSoon);
         setShowReminderModal(true);
       }
     };
-
     checkReminders();
     var interval = setInterval(checkReminders, 60000);
     return function () { clearInterval(interval); };
@@ -105,9 +96,7 @@ var ExamPortal = function (props) {
     setDismissedReminders(newSet);
     var remaining = reminderExams.filter(function (e) { return e.examCode !== code; });
     setReminderExams(remaining);
-    if (remaining.length === 0) {
-      setShowReminderModal(false);
-    }
+    if (remaining.length === 0) setShowReminderModal(false);
   };
 
   var dismissAllReminders = function () {
@@ -129,19 +118,14 @@ var ExamPortal = function (props) {
 
   var isValidCode = function (code) {
     if (LEGACY_CODES[code]) return true;
-    var found = activeCustomExams.find(function (e) { return e.examCode === code; });
-    if (found) return true;
-    return false;
+    return !!activeCustomExams.find(function (e) { return e.examCode === code; });
   };
 
   var handleEnterExam = function (e) {
     e.preventDefault();
     setCodeError('');
     var trimmed = examCode.trim().toUpperCase();
-    if (!trimmed) {
-      setCodeError('Please enter your exam code.');
-      return;
-    }
+    if (!trimmed) { setCodeError('Please enter your exam code.'); return; }
     if (isValidCode(trimmed)) {
       navigate('/exam/' + trimmed);
     } else {
@@ -160,70 +144,52 @@ var ExamPortal = function (props) {
   var getExamList = function () {
     var currentTime = new Date();
     var list = [];
-
-    // Add default exams based on tab
-    if (EXAMS[activeTab]) {
-      EXAMS[activeTab].forEach(function (exam) {
-        list.push(exam);
-      });
-    }
-
-    // Add custom exams only to ongoing tab
+    if (EXAMS[activeTab]) EXAMS[activeTab].forEach(function (exam) { list.push(exam); });
     if (activeTab === 'ongoing') {
       activeCustomExams.forEach(function (ce) {
         var deadlineTime = ce.deadline ? new Date(ce.deadline) : null;
         var timeRemaining = deadlineTime ? (deadlineTime - currentTime) : Infinity;
         var isExpiringSoon = timeRemaining > 0 && timeRemaining <= 30 * 60 * 1000;
-
         list.push({
-          id: ce.id,
-          title: ce.title,
-          code: ce.examCode,
+          id: ce.id, title: ce.title, code: ce.examCode,
           date: new Date(ce.createdAt).toISOString().split('T')[0],
           duration: ce.duration + ' min',
           status: isExpiringSoon ? 'Expiring Soon' : 'Live Now',
-          hasPdf: true,
-          deadline: ce.deadline,
+          hasPdf: true, deadline: ce.deadline,
         });
       });
     }
-
     return list;
   };
 
   var examList = getExamList();
   var ongoingCount = EXAMS.ongoing.length + activeCustomExams.length;
-  var studentName = student ? student.name : '';
+
   var studentEmail = student ? (student.email || student.rollNo || '') : '';
-  var studentInitial = studentName ? studentName.charAt(0) : '';
+  var studentInitial = (student && student.name)
+    ? student.name.charAt(0).toUpperCase()
+    : (studentEmail ? studentEmail.charAt(0).toUpperCase() : '?');
 
   return (
     <div style={{ display: 'flex' }}>
       <Sidebar active="exams" onLogout={handleLogout} />
       <div className="dashboard-main">
-        {/* Topbar */}
+
         <div className="dashboard-topbar">
           <h3>Exams</h3>
           <div className="user-info">
-            <div>
-              <div style={{ fontWeight: 600, fontSize: 14, color: '#1a1a2e' }}>{studentName}</div>
-              <div style={{ fontSize: 12, color: '#888' }}>{studentEmail}</div>
-            </div>
+            <div style={{ fontSize: 13, color: '#7B1FA2', fontWeight: 500 }}>{studentEmail}</div>
             <div className="user-avatar">{studentInitial}</div>
           </div>
         </div>
 
-        {/* Reminder Banner */}
         {reminderExams.length > 0 && !showReminderModal && (
           <div className="reminder-banner" onClick={function () { setShowReminderModal(true); }}>
             <span className="reminder-banner-icon">!</span>
-            <span>
-              {reminderExams.length} exam{reminderExams.length > 1 ? 's' : ''} expiring within 30 minutes! Click to view.
-            </span>
+            <span>{reminderExams.length} exam{reminderExams.length > 1 ? 's' : ''} expiring within 30 minutes! Click to view.</span>
           </div>
         )}
 
-        {/* Tabs */}
         <Nav variant="pills" className="exam-tab-pills mb-4" activeKey={activeTab}>
           <Nav.Item>
             <Nav.Link eventKey="past" onClick={function () { setActiveTab('past'); }}>Past Exams</Nav.Link>
@@ -238,7 +204,6 @@ var ExamPortal = function (props) {
           </Nav.Item>
         </Nav>
 
-        {/* Exam Cards */}
         {examList.length === 0 ? (
           <p style={{ color: '#888', textAlign: 'center', padding: 40 }}>No exams found.</p>
         ) : (
@@ -250,59 +215,38 @@ var ExamPortal = function (props) {
                     <div className="d-flex justify-content-between align-items-start mb-3">
                       <div style={{
                         width: 42, height: 42, borderRadius: 10,
-                        background: exam.status === 'Expiring Soon' ? '#fff8e1' : '#e3f2fd',
+                        background: exam.status === 'Expiring Soon' ? '#fff8e1' : '#F3E5F5',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 14, fontWeight: 700, color: '#1565c0',
+                        fontSize: 14, fontWeight: 700, color: '#5B0A7B',
                       }}>
                         {exam.hasPdf ? 'PDF' : 'MCQ'}
                       </div>
                       {getStatusBadge(exam.status)}
                     </div>
-
-                    <h6 style={{ fontWeight: 700, color: '#1a1a2e', marginBottom: 4 }}>{exam.title}</h6>
+                    <h6 style={{ fontWeight: 700, color: '#2D0040', marginBottom: 4 }}>{exam.title}</h6>
                     <p style={{ fontSize: 13, color: '#888', marginBottom: 12 }}>Code: {exam.code}</p>
-
                     <div className="d-flex justify-content-between" style={{ fontSize: 13, color: '#666' }}>
                       <span>Date: {exam.date}</span>
                       <span>Duration: {exam.duration}</span>
                     </div>
-
                     {exam.deadline && (
-                      <div style={{
-                        marginTop: 8, fontSize: 12,
-                        color: exam.status === 'Expiring Soon' ? '#e65100' : '#666',
-                        fontWeight: exam.status === 'Expiring Soon' ? 700 : 400,
-                      }}>
-                        Deadline: {new Date(exam.deadline).toLocaleString('en-IN', {
-                          day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
-                        })}
+                      <div style={{ marginTop: 8, fontSize: 12, color: exam.status === 'Expiring Soon' ? '#e65100' : '#666', fontWeight: exam.status === 'Expiring Soon' ? 700 : 400 }}>
+                        Deadline: {new Date(exam.deadline).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                       </div>
                     )}
-
                     {exam.status === 'Expiring Soon' && (
-                      <div className="expiring-soon-badge">
-                        Time left: {getTimeRemaining(exam.deadline)}
-                      </div>
+                      <div className="expiring-soon-badge">Time left: {getTimeRemaining(exam.deadline)}</div>
                     )}
-
                     {exam.hasPdf && exam.status !== 'Expiring Soon' && (
-                      <div style={{
-                        marginTop: 12, padding: '6px 12px', background: '#e3f2fd', borderRadius: 8,
-                        fontSize: 12, fontWeight: 600, color: '#1565c0', textAlign: 'center',
-                      }}>
+                      <div style={{ marginTop: 12, padding: '6px 12px', background: '#F3E5F5', borderRadius: 8, fontSize: 12, fontWeight: 600, color: '#5B0A7B', textAlign: 'center' }}>
                         PDF-Based Exam
                       </div>
                     )}
-
                     {exam.score && (
-                      <div style={{
-                        marginTop: 12, padding: '8px 12px', background: '#e8f5e9', borderRadius: 8,
-                        fontSize: 13, fontWeight: 600, color: '#2e7d32', textAlign: 'center',
-                      }}>
+                      <div style={{ marginTop: 12, padding: '8px 12px', background: '#e8f5e9', borderRadius: 8, fontSize: 13, fontWeight: 600, color: '#2e7d32', textAlign: 'center' }}>
                         Score: {exam.score}
                       </div>
                     )}
-
                     {activeTab === 'ongoing' && studentEmail && (
                       <div style={{ marginTop: 8, fontSize: 11, color: '#888', fontStyle: 'italic' }}>
                         Code sent to: {studentEmail}
@@ -315,34 +259,21 @@ var ExamPortal = function (props) {
           </Row>
         )}
 
-        {/* Code Entry — Only in Ongoing Tab */}
         {activeTab === 'ongoing' && (
           <div className="code-entry-section">
             <Row className="align-items-center">
               <Col md={6}>
                 <h5>Enter Your Exam Code</h5>
-                <p>
-                  Eligible students receive a unique exam code via email
-                  ({studentEmail || 'your registered email'}).
-                  Enter it below to start your exam.
-                </p>
+                <p>Eligible students receive a unique exam code via email ({studentEmail || 'your registered email'}). Enter it below to start your exam.</p>
               </Col>
               <Col md={6}>
                 <Form onSubmit={handleEnterExam}>
                   {codeError && (
-                    <Alert variant="danger" className="py-2" style={{ borderRadius: 10, fontSize: 13 }}>
-                      {codeError}
-                    </Alert>
+                    <Alert variant="danger" className="py-2" style={{ borderRadius: 10, fontSize: 13 }}>{codeError}</Alert>
                   )}
                   <div className="d-flex gap-2">
-                    <Form.Control
-                      className="code-input flex-grow-1"
-                      type="text"
-                      placeholder="Enter exam code"
-                      value={examCode}
-                      onChange={function (e) { setExamCode(e.target.value); }}
-                      maxLength={12}
-                    />
+                    <Form.Control className="code-input flex-grow-1" type="text" placeholder="Enter exam code"
+                      value={examCode} onChange={function (e) { setExamCode(e.target.value); }} maxLength={12} />
                     <Button type="submit" className="btn-enter-exam">Enter</Button>
                   </div>
                   <small style={{ color: 'rgba(255,255,255,0.4)', marginTop: 8, display: 'block' }}>
@@ -355,13 +286,7 @@ var ExamPortal = function (props) {
         )}
       </div>
 
-      {/* Reminder Modal */}
-      <Modal
-        show={showReminderModal}
-        onHide={function () { setShowReminderModal(false); }}
-        centered
-        className="modal-reminder"
-      >
+      <Modal show={showReminderModal} onHide={function () { setShowReminderModal(false); }} centered className="modal-reminder">
         <Modal.Body style={{ padding: 0 }}>
           <div className="reminder-modal-content">
             <div className="reminder-modal-header">
@@ -372,7 +297,6 @@ var ExamPortal = function (props) {
               <h4>Exam Reminder</h4>
               <p>The following exam{reminderExams.length > 1 ? 's are' : ' is'} expiring soon!</p>
             </div>
-
             <div className="reminder-exam-list">
               {reminderExams.map(function (exam) {
                 return (
@@ -380,32 +304,16 @@ var ExamPortal = function (props) {
                     <div className="reminder-exam-info">
                       <div className="reminder-exam-title">{exam.title}</div>
                       <div className="reminder-exam-code">Code: {exam.examCode}</div>
-                      <div className="reminder-exam-time">
-                        Time remaining: <strong>{getTimeRemaining(exam.deadline)}</strong>
-                      </div>
-                      {studentEmail && (
-                        <div className="reminder-exam-email">
-                          Code sent to: {studentEmail}
-                        </div>
-                      )}
+                      <div className="reminder-exam-time">Time remaining: <strong>{getTimeRemaining(exam.deadline)}</strong></div>
+                      {studentEmail && <div className="reminder-exam-email">Code sent to: {studentEmail}</div>}
                     </div>
                     <div className="reminder-exam-actions">
-                      <Button
-                        size="sm" variant="dark"
-                        style={{ borderRadius: 8, fontWeight: 600 }}
-                        onClick={function () {
-                          setShowReminderModal(false);
-                          setExamCode(exam.examCode);
-                          setActiveTab('ongoing');
-                        }}
-                      >
+                      <Button size="sm" style={{ borderRadius: 8, fontWeight: 600, background: '#5B0A7B', border: 'none', color: '#fff' }}
+                        onClick={function () { setShowReminderModal(false); setExamCode(exam.examCode); setActiveTab('ongoing'); }}>
                         Enter Code
                       </Button>
-                      <Button
-                        size="sm" variant="outline-secondary"
-                        style={{ borderRadius: 8, fontWeight: 600 }}
-                        onClick={function () { dismissReminder(exam.examCode); }}
-                      >
+                      <Button size="sm" variant="outline-secondary" style={{ borderRadius: 8, fontWeight: 600 }}
+                        onClick={function () { dismissReminder(exam.examCode); }}>
                         Dismiss
                       </Button>
                     </div>
@@ -413,22 +321,9 @@ var ExamPortal = function (props) {
                 );
               })}
             </div>
-
             <div className="reminder-modal-footer">
-              <Button
-                variant="outline-secondary"
-                onClick={dismissAllReminders}
-                style={{ borderRadius: 10, fontWeight: 600, padding: '8px 24px' }}
-              >
-                Dismiss All
-              </Button>
-              <Button
-                variant="dark"
-                onClick={function () { setShowReminderModal(false); }}
-                style={{ borderRadius: 10, fontWeight: 600, padding: '8px 24px' }}
-              >
-                Close
-              </Button>
+              <Button variant="outline-secondary" onClick={dismissAllReminders} style={{ borderRadius: 10, fontWeight: 600, padding: '8px 24px' }}>Dismiss All</Button>
+              <Button onClick={function () { setShowReminderModal(false); }} style={{ borderRadius: 10, fontWeight: 600, padding: '8px 24px', background: '#5B0A7B', border: 'none' }}>Close</Button>
             </div>
           </div>
         </Modal.Body>

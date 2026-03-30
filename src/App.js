@@ -1,136 +1,88 @@
 import React, { useState } from 'react';
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './components/LoginPage';
 import Dashboard from './components/Dashboard';
 import ExamPortal from './components/ExamPortal';
 import ExamDashboard from './components/ExamDashboard';
 import ResultPage from './components/ResultPage';
-import AdminDashboard from './components/AdminDashboard';
-import CreateExam from './components/CreateExam';
+import { AdminDashboard, CreateExam, ManageExams, ViewResults, AdminSettings } from './components/AdminDashboard';
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userInfo, setUserInfo] = useState(null);
+  const [user, setUser] = useState(null);
   const [customExams, setCustomExams] = useState([]);
+  const [examResults, setExamResults] = useState([]);
+  const [adminSettings, setAdminSettings] = useState({
+    defaultOptionsCount: 4,
+    shuffleQuestions: false,
+  });
 
-  const handleLogin = (info) => {
-    setIsLoggedIn(true);
-    setUserInfo(info);
-  };
+  const handleLogin = (userData) => setUser(userData);
+  const handleLogout = () => setUser(null);
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setUserInfo(null);
-  };
+  const addCustomExam = (exam) => setCustomExams([...customExams, exam]);
+  const deleteExam = (examId) => setCustomExams(customExams.filter(e => e.id !== examId));
 
-  const addExam = (exam) => {
-    setCustomExams((prev) => [...prev, exam]);
-  };
+  const updateSettings = (newSettings) => setAdminSettings({ ...adminSettings, ...newSettings });
 
-  const deleteExam = (examCode) => {
-    setCustomExams((prev) => prev.filter((e) => e.examCode !== examCode));
-  };
+  // Not logged in
+  if (!user) {
+    return (
+      <Router>
+        <Routes>
+          <Route path="*" element={<LoginPage onLogin={handleLogin} />} />
+        </Routes>
+      </Router>
+    );
+  }
 
-  const isAdmin = userInfo?.role === 'admin';
+  // Admin routes
+  if (user.role === 'admin') {
+    return (
+      <Router>
+        <Routes>
+          <Route path="/admin" element={
+            <AdminDashboard admin={user} onLogout={handleLogout} customExams={customExams} examResults={examResults} />
+          } />
+          <Route path="/admin/create" element={
+            <CreateExam admin={user} onLogout={handleLogout} onCreateExam={addCustomExam} settings={adminSettings} />
+          } />
+          <Route path="/admin/exams" element={
+            <ManageExams admin={user} onLogout={handleLogout} customExams={customExams} onDeleteExam={deleteExam} />
+          } />
+          <Route path="/admin/results" element={
+            <ViewResults admin={user} onLogout={handleLogout} examResults={examResults} />
+          } />
+          <Route path="/admin/settings" element={
+            <AdminSettings admin={user} onLogout={handleLogout} settings={adminSettings} onUpdateSettings={updateSettings} />
+          } />
+          <Route path="/" element={<Navigate to="/admin" />} />
+          <Route path="*" element={<Navigate to="/admin" />} />
+        </Routes>
+      </Router>
+    );
+  }
 
+  // Student routes
   return (
     <Router>
       <Routes>
-        {/* Login */}
-        <Route
-          path="/"
-          element={
-            isLoggedIn ? (
-              <Navigate to={isAdmin ? '/admin' : '/dashboard'} />
-            ) : (
-              <LoginPage onLogin={handleLogin} />
-            )
-          }
-        />
-
-        {/* ── Admin Routes ── */}
-        <Route
-          path="/admin"
-          element={
-            isLoggedIn && isAdmin ? (
-              <AdminDashboard
-                user={userInfo}
-                onLogout={handleLogout}
-                customExams={customExams}
-                deleteExam={deleteExam}
-              />
-            ) : (
-              <Navigate to="/" />
-            )
-          }
-        />
-        <Route
-          path="/admin/create-exam"
-          element={
-            isLoggedIn && isAdmin ? (
-              <CreateExam
-                user={userInfo}
-                onLogout={handleLogout}
-                addExam={addExam}
-              />
-            ) : (
-              <Navigate to="/" />
-            )
-          }
-        />
-
-        {/* ── Student Routes ── */}
-        <Route
-          path="/dashboard"
-          element={
-            isLoggedIn && !isAdmin ? (
-              <Dashboard student={userInfo} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/" />
-            )
-          }
-        />
-        <Route
-          path="/exams"
-          element={
-            isLoggedIn && !isAdmin ? (
-              <ExamPortal
-                student={userInfo}
-                onLogout={handleLogout}
-                customExams={customExams}
-              />
-            ) : (
-              <Navigate to="/" />
-            )
-          }
-        />
-        <Route
-          path="/exam/:examCode"
-          element={
-            isLoggedIn && !isAdmin ? (
-              <ExamDashboard student={userInfo} customExams={customExams} />
-            ) : (
-              <Navigate to="/" />
-            )
-          }
-        />
-        <Route
-          path="/result"
-          element={
-            isLoggedIn && !isAdmin ? (
-              <ResultPage student={userInfo} onLogout={handleLogout} />
-            ) : (
-              <Navigate to="/" />
-            )
-          }
-        />
-
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="/dashboard" element={
+          <Dashboard student={user} onLogout={handleLogout} customExams={customExams} />
+        } />
+        <Route path="/exams" element={
+          <ExamPortal student={user} onLogout={handleLogout} customExams={customExams} />
+        } />
+        <Route path="/exam/:examCode" element={
+          <ExamDashboard student={user} customExams={customExams} />
+        } />
+        <Route path="/result" element={
+          <ResultPage student={user} onLogout={handleLogout} />
+        } />
+        <Route path="/results" element={
+          <ResultPage student={user} onLogout={handleLogout} />
+        } />
+        <Route path="/" element={<Navigate to="/dashboard" />} />
+        <Route path="*" element={<Navigate to="/dashboard" />} />
       </Routes>
     </Router>
   );
