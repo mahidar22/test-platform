@@ -1,118 +1,168 @@
 import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Row, Col } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import { Row, Col, Button } from 'react-bootstrap';
+import Sidebar from './Sidebar';
 
-const Sidebar = ({ active, onLogout }) => {
+const Dashboard = ({ student, onLogout, customExams = [] }) => {
   const navigate = useNavigate();
-  const menuItems = [
-    { key: 'dashboard', icon: '🏠', label: 'Dashboard', path: '/dashboard' },
-    { key: 'exams', icon: '📝', label: 'Exams', path: '/exams' },
-    { key: 'results', icon: '📊', label: 'Results', path: '/result' },
-  ];
 
-  return (
-    <div className="dashboard-sidebar">
-      <div className="sidebar-brand">
-        <h4><span>Exam</span>Portal</h4>
-      </div>
-      <nav className="sidebar-nav">
-        {menuItems.map((item) => (
-          <div className="nav-item" key={item.key}>
-            <div
-              className={`nav-link ${active === item.key ? 'active' : ''}`}
-              onClick={() => navigate(item.path)}
-            >
-              <span className="nav-icon">{item.icon}</span>
-              {item.label}
-            </div>
-          </div>
-        ))}
-        <div className="nav-item" style={{ marginTop: 32 }}>
-          <div className="nav-link" onClick={onLogout}>
-            <span className="nav-icon">🚪</span>Logout
-          </div>
-        </div>
-      </nav>
-    </div>
-  );
-};
-
-const Dashboard = ({ student, onLogout }) => {
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  const getActive = () => {
-    if (location.pathname.includes('/exams')) return 'exams';
-    if (location.pathname.includes('/result')) return 'results';
-    return 'dashboard';
+  const handleLogout = () => {
+    onLogout();
+    navigate('/');
   };
 
-  const stats = [
-    { icon: '📋', bg: '#e3f2fd', color: '#1565c0', label: 'Total Exams', value: 8 },
-    { icon: '✅', bg: '#e8f5e9', color: '#2e7d32', label: 'Completed', value: 3 },
-    { icon: '🔴', bg: '#fff3e0', color: '#e65100', label: 'Ongoing', value: 2 },
-    { icon: '📅', bg: '#fce4ec', color: '#c62828', label: 'Upcoming', value: 3 },
-  ];
+  const getActiveExamsCount = () => {
+    const currentTime = new Date();
+    return customExams.filter((e) => {
+      if (!e.deadline) return true;
+      return new Date(e.deadline) > currentTime;
+    }).length;
+  };
 
-  const handleLogout = () => { onLogout(); navigate('/'); };
+  const studentEmail = student?.email || student?.rollNo || '';
+  const studentInitial = student?.name
+    ? student.name.charAt(0).toUpperCase()
+    : studentEmail
+    ? studentEmail.charAt(0).toUpperCase()
+    : '?';
+
+  const activeExamsCount = getActiveExamsCount();
 
   return (
-    <div style={{ display: 'flex' }}>
-      <Sidebar active={getActive()} onLogout={handleLogout} />
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+      <Sidebar active="dashboard" onLogout={handleLogout} />
+
       <div className="dashboard-main">
+        {/* Topbar */}
         <div className="dashboard-topbar">
           <h3>Dashboard</h3>
           <div className="user-info">
-            <div>
-              <div style={{ fontWeight: 600, fontSize: 14, color: '#1a1a2e' }}>{student?.name}</div>
-              <div style={{ fontSize: 12, color: '#888' }}>{student?.rollNo}</div>
-            </div>
-            <div className="user-avatar">{student?.name?.charAt(0)}</div>
+            <div style={{ fontSize: 13, color: '#7B1FA2', fontWeight: 500 }}>{studentEmail}</div>
+            <div className="user-avatar">{studentInitial}</div>
           </div>
         </div>
 
-        {/* Stats */}
+        {/* Stats Cards — Number beside text inline */}
         <Row className="g-4 mb-4">
-          {stats.map((s, i) => (
-            <Col md={3} sm={6} key={i}>
-              <div className="stat-card">
-                <div className="stat-icon" style={{ background: s.bg, color: s.color }}>{s.icon}</div>
-                <h5>{s.label}</h5>
-                <h2>{s.value}</h2>
+          <Col md={6} lg={3}>
+            <div className="stat-card">
+              <div className="stat-card-inline">
+                <div className="stat-icon" style={{ background: '#E3F2FD' }}>📝</div>
+                <div className="stat-text">
+                  <h5>Active Exams</h5>
+                </div>
+                <div className="stat-number">{activeExamsCount}</div>
               </div>
-            </Col>
-          ))}
+            </div>
+          </Col>
+          <Col md={6} lg={3}>
+            <div className="stat-card">
+              <div className="stat-card-inline">
+                <div className="stat-icon" style={{ background: '#E8F5E9' }}>✅</div>
+                <div className="stat-text">
+                  <h5>Completed</h5>
+                </div>
+                <div className="stat-number" style={{ color: '#4caf50' }}>0</div>
+              </div>
+            </div>
+          </Col>
+          <Col md={6} lg={3}>
+            <div className="stat-card">
+              <div className="stat-card-inline">
+                <div className="stat-icon" style={{ background: '#FFF3E0' }}>⏰</div>
+                <div className="stat-text">
+                  <h5>Upcoming</h5>
+                </div>
+                <div className="stat-number" style={{ color: '#ff9800' }}>2</div>
+              </div>
+            </div>
+          </Col>
+          <Col md={6} lg={3}>
+            <div className="stat-card">
+              <div className="stat-card-inline">
+                <div className="stat-icon" style={{ background: '#F3E5F5' }}>📊</div>
+                <div className="stat-text">
+                  <h5>Avg Score</h5>
+                </div>
+                <div className="stat-number" style={{ color: '#7B1FA2' }}>—</div>
+              </div>
+            </div>
+          </Col>
         </Row>
 
-        {/* Welcome Message — Replaced GoTo/ViewResults */}
+        {/* Welcome Section */}
         <div className="welcome-section">
           <div className="welcome-card">
             <div className="welcome-icon">👋</div>
-            <h4>Welcome, {student?.name}!</h4>
+            <h4>Welcome to ExamPortal!</h4>
             <p>
-              You are logged in to the Online Examination &amp; Assessment Platform.
-              Use the navigation panel on the left to access your exams and results.
+              Your online examination platform. Take exams, track your progress,
+              and view your results all in one place.
             </p>
+
             <div className="welcome-info-grid">
               <div className="welcome-info-item">
+                <span className="welcome-info-icon">📧</span>
+                <span><strong>Email:</strong> {studentEmail}</span>
+              </div>
+              {student?.rollNo && (
+                <div className="welcome-info-item">
+                  <span className="welcome-info-icon">🎫</span>
+                  <span><strong>Roll No:</strong> {student.rollNo}</span>
+                </div>
+              )}
+              <div className="welcome-info-item">
                 <span className="welcome-info-icon">📝</span>
-                <span>Click <strong>Exams</strong> to view ongoing, past & upcoming exams</span>
+                <span><strong>Active Exams:</strong> {activeExamsCount} available</span>
               </div>
-              <div className="welcome-info-item">
-                <span className="welcome-info-icon">📊</span>
-                <span>Click <strong>Results</strong> to check your scores</span>
-              </div>
-              <div className="welcome-info-item">
-                <span className="welcome-info-icon">🔑</span>
-                <span>Enter your <strong>Exam Code</strong> received via email to start an exam</span>
-              </div>
+            </div>
+
+            <div style={{ marginTop: 24 }}>
+              <Button
+                onClick={() => navigate('/exams')}
+                style={{
+                  background: 'linear-gradient(135deg, #5B0A7B, #7B1FA2)',
+                  border: 'none',
+                  borderRadius: 10,
+                  padding: '12px 32px',
+                  fontWeight: 600,
+                  fontSize: 15,
+                }}
+              >
+                Go to Exams →
+              </Button>
             </div>
           </div>
         </div>
+
+        {/* Quick Actions */}
+        <Row className="g-4 mt-4">
+          <Col md={6}>
+            <div className="stat-card" style={{ cursor: 'pointer' }} onClick={() => navigate('/exams')}>
+              <div className="d-flex align-items-center gap-3">
+                <div className="stat-icon" style={{ background: '#E8F5E9', marginBottom: 0 }}>🚀</div>
+                <div>
+                  <h5 style={{ margin: 0, color: '#2D0040', fontWeight: 700 }}>Take an Exam</h5>
+                  <p style={{ margin: 0, color: '#888', fontSize: 13 }}>Enter your exam code and start</p>
+                </div>
+              </div>
+            </div>
+          </Col>
+          <Col md={6}>
+            <div className="stat-card" style={{ cursor: 'pointer' }} onClick={() => navigate('/results')}>
+              <div className="d-flex align-items-center gap-3">
+                <div className="stat-icon" style={{ background: '#FFF3E0', marginBottom: 0 }}>📈</div>
+                <div>
+                  <h5 style={{ margin: 0, color: '#2D0040', fontWeight: 700 }}>View Results</h5>
+                  <p style={{ margin: 0, color: '#888', fontSize: 13 }}>Check your exam scores</p>
+                </div>
+              </div>
+            </div>
+          </Col>
+        </Row>
       </div>
     </div>
   );
 };
 
-export { Sidebar };
 export default Dashboard;
