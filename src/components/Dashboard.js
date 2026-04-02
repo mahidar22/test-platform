@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Row, Col, Button } from 'react-bootstrap';
 import Sidebar from './Sidebar';
 
-const Dashboard = ({ student, onLogout, customExams = [] }) => {
+const Dashboard = ({ student, onLogout, customExams, completedExams, upcomingExams }) => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -13,18 +13,18 @@ const Dashboard = ({ student, onLogout, customExams = [] }) => {
 
   const getActiveExamsCount = () => {
     const currentTime = new Date();
-    return customExams.filter((e) => {
+    return customExams?.filter((e) => {
       if (!e.deadline) return true;
       return new Date(e.deadline) > currentTime;
     }).length;
   };
 
-  const studentEmail = student?.email || student?.rollNo || '';
+  const studentEmail = student?.email || student?.rollNo;
   const studentInitial = student?.name
     ? student.name.charAt(0).toUpperCase()
     : studentEmail
     ? studentEmail.charAt(0).toUpperCase()
-    : '?';
+    : '';
 
   const activeExamsCount = getActiveExamsCount();
 
@@ -62,7 +62,7 @@ const Dashboard = ({ student, onLogout, customExams = [] }) => {
                 <div className="stat-text">
                   <h5>Completed</h5>
                 </div>
-                <div className="stat-number" style={{ color: '#4caf50' }}>0</div>
+                <div className="stat-number" style={{ color: '#4caf50' }}>{completedExams?.length}</div>
               </div>
             </div>
           </Col>
@@ -73,7 +73,7 @@ const Dashboard = ({ student, onLogout, customExams = [] }) => {
                 <div className="stat-text">
                   <h5>Upcoming</h5>
                 </div>
-                <div className="stat-number" style={{ color: '#ff9800' }}>2</div>
+                <div className="stat-number" style={{ color: '#ff9800' }}>{upcomingExams?.length}</div>
               </div>
             </div>
           </Col>
