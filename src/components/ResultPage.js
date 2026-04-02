@@ -24,8 +24,8 @@ const ResultPage = ({ student, onLogout }) => {
     const dateStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
     const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
 
-    const answerKey = result.answerKey || {};
-    const optionsCount = result.optionsCount || 4;
+    const answerKey = result.answerKey;
+    const optionsCount = result.optionsCount;
 
     let answerRows = '';
     let correctCount = 0;
@@ -81,8 +81,7 @@ const ResultPage = ({ student, onLogout }) => {
         </tr>`;
     }
 
-    const percentage = Math.round((correctCount / result.total) * 100);
-    const studentEmail = student?.email || student?.rollNo || '';
+    const studentEmail = student?.email || student?.rollNo;
 
     const htmlContent = `
 <!DOCTYPE html>
@@ -163,14 +162,18 @@ const ResultPage = ({ student, onLogout }) => {
     if (!result) return;
     const now = new Date();
     const dateStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-    const studentEmail = student?.email || student?.rollNo || '';
+    const studentEmail = student?.email || student?.rollNo;
     const w = window.open('', '_blank');
     w.document.write(`<!DOCTYPE html><html><head><title>Report</title><style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:'Segoe UI',sans-serif;padding:40px;}.h{text-align:center;margin-bottom:32px;border-bottom:2px solid #2D0040;padding-bottom:16px;}table{width:100%;border-collapse:collapse;margin-bottom:20px;}th,td{padding:10px 14px;text-align:left;border:1px solid #E1BEE7;font-size:14px;}th{background:#F8F0FB;}.s{display:flex;gap:20px;margin:20px 0;}.sb{flex:1;text-align:center;padding:16px;border:1px solid #E1BEE7;border-radius:8px;}.sb .n{font-size:28px;font-weight:700;}.f{text-align:center;margin-top:40px;color:#aaa;font-size:12px;border-top:1px solid #E1BEE7;padding-top:16px;}</style></head><body><div class="h"><h1>ExamPortal - Report</h1><p>${dateStr}</p></div><table><tr><th>Email</th><td>${studentEmail}</td></tr><tr><th>Exam</th><td>${result.examTitle}</td></tr><tr><th>Code</th><td>${result.examCode}</td></tr></table><div class="s"><div class="sb"><div class="n">${result.total}</div><div>Total</div></div><div class="sb"><div class="n" style="color:#4caf50;">${result.attempted}</div><div>Attempted</div></div><div class="sb"><div class="n" style="color:#e53935;">${result.total - result.attempted}</div><div>Unanswered</div></div><div class="sb"><div class="n" style="color:#7B1FA2;">${Math.round((result.attempted / result.total) * 100)}%</div><div>Completion</div></div></div><div class="f">ExamPortal</div></body></html>`);
     w.document.close(); w.focus(); setTimeout(() => w.print(), 500);
   };
 
-  const studentEmail = student?.email || student?.rollNo || '';
-  const studentInitial = student?.name ? student.name.charAt(0) : (studentEmail ? studentEmail.charAt(0).toUpperCase() : '?');
+  const studentEmail = student?.email || student?.rollNo;
+  const studentInitial = student?.name
+    ? student.name.charAt(0)
+    : studentEmail
+    ? studentEmail.charAt(0).toUpperCase()
+    : '';
 
   if (!result) {
     return (
