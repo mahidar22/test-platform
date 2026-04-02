@@ -3,9 +3,7 @@ import { Form, Button, Alert, Spinner } from 'react-bootstrap';
 
 const VALID_CREDENTIALS = [
   { password: 'admin123', name: 'Administrator', role: 'admin', email: 'admin@examportal.com' },
-  { password: 'pass123', name: 'Arun Kumar', rollNo: '21CS101', role: 'student', email: 'arun.kumar@college.edu' },
-  { password: 'pass123', name: 'Priya Sharma', rollNo: '21CS102', role: 'student', email: 'priya.sharma@college.edu' },
-  { password: 'pass123', name: 'Rahul Dev', rollNo: '21EC201', role: 'student', email: 'rahul.dev@college.edu' },
+  { password: 'pass123', name: 'king marcus', rollNo: '21CS101', role: 'student', email: 'mahidar@gmail.com' },
 ];
 
 const LoginPage = ({ onLogin }) => {
@@ -30,7 +28,7 @@ const LoginPage = ({ onLogin }) => {
       if (found) {
         onLogin({
           name: found.name,
-          rollNo: found.rollNo || '',
+          rollNo: found.rollNo,
           email: found.email,
           role: found.role,
         });
