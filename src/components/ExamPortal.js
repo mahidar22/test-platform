@@ -3,28 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Row, Col, Nav, Form, Button, Badge, Alert, Modal } from 'react-bootstrap';
 import Sidebar from './Sidebar';
 
-var EXAMS = {
-  past: [
-    { id: 1, title: 'Data Structures & Algorithms', code: 'CS301', date: '2025-01-15', duration: '60 min', status: 'Completed', score: '42/50' },
-    { id: 2, title: 'Database Management Systems', code: 'CS302', date: '2025-02-10', duration: '90 min', status: 'Completed', score: '38/50' },
-  ],
-  ongoing: [
-    { id: 4, title: 'Operating Systems', code: 'CS401', date: '2025-06-20', duration: '90 min', status: 'Live Now' },
-  ],
-  upcoming: [
-    { id: 6, title: 'Machine Learning', code: 'CS501', date: '2025-07-10', duration: '90 min', status: 'Scheduled' },
-    { id: 7, title: 'Artificial Intelligence', code: 'CS502', date: '2025-07-15', duration: '60 min', status: 'Scheduled' },
-  ],
-};
-
-var LEGACY_CODES = {
-  'CS401-XK9M': { examId: 4, title: 'Operating Systems', code: 'CS401' },
-};
-
 var ExamPortal = function (props) {
   var student = props.student;
   var onLogout = props.onLogout;
-  var customExams = props.customExams || [];
+  var customExams = props.customExams;
 
   var activeTabState = useState('ongoing');
   var activeTab = activeTabState[0];
@@ -59,10 +41,18 @@ var ExamPortal = function (props) {
 
   var getActiveCustomExams = function () {
     var currentTime = new Date();
-    return customExams.filter(function (e) {
+    return customExams?.filter(function (e) {
       if (!e.deadline) return true;
       return new Date(e.deadline) > currentTime;
-    });
+    }) || [];
+  };
+
+  var getExpiredCustomExams = function () {
+    var currentTime = new Date();
+    return customExams?.filter(function (e) {
+      if (!e.deadline) return false;
+      return new Date(e.deadline) <= currentTime;
+    }) || [];
   };
 
   var activeCustomExams = getActiveCustomExams();
@@ -70,10 +60,10 @@ var ExamPortal = function (props) {
   useEffect(function () {
     var checkReminders = function () {
       var currentTime = new Date();
-      var activeExams = customExams.filter(function (e) {
+      var activeExams = customExams?.filter(function (e) {
         if (!e.deadline) return false;
         return new Date(e.deadline) > currentTime;
-      });
+      }) || [];
       var expiringSoon = activeExams.filter(function (exam) {
         var deadlineTime = new Date(exam.deadline);
         var timeRemaining = deadlineTime - currentTime;
@@ -117,7 +107,6 @@ var ExamPortal = function (props) {
   };
 
   var isValidCode = function (code) {
-    if (LEGACY_CODES[code]) return true;
     return !!activeCustomExams.find(function (e) { return e.examCode === code; });
   };
 
@@ -138,13 +127,14 @@ var ExamPortal = function (props) {
     if (status === 'Live Now') return <Badge className="badge-status" bg="danger">Live Now</Badge>;
     if (status === 'Scheduled') return <Badge className="badge-status" bg="primary">Scheduled</Badge>;
     if (status === 'Expiring Soon') return <Badge className="badge-status" bg="warning" text="dark">Expiring Soon</Badge>;
+    if (status === 'Expired') return <Badge className="badge-status" bg="secondary">Expired</Badge>;
     return null;
   };
 
   var getExamList = function () {
     var currentTime = new Date();
     var list = [];
-    if (EXAMS[activeTab]) EXAMS[activeTab].forEach(function (exam) { list.push(exam); });
+
     if (activeTab === 'ongoing') {
       activeCustomExams.forEach(function (ce) {
         var deadlineTime = ce.deadline ? new Date(ce.deadline) : null;
@@ -159,16 +149,29 @@ var ExamPortal = function (props) {
         });
       });
     }
+
+    if (activeTab === 'past') {
+      getExpiredCustomExams().forEach(function (ce) {
+        list.push({
+          id: ce.id, title: ce.title, code: ce.examCode,
+          date: new Date(ce.createdAt).toISOString().split('T')[0],
+          duration: ce.duration + ' min',
+          status: 'Expired',
+          hasPdf: true, deadline: ce.deadline,
+        });
+      });
+    }
+
     return list;
   };
 
   var examList = getExamList();
-  var ongoingCount = EXAMS.ongoing.length + activeCustomExams.length;
+  var ongoingCount = activeCustomExams?.length;
 
-  var studentEmail = student ? (student.email || student.rollNo || '') : '';
+  var studentEmail = student ? (student.email || student.rollNo) : '';
   var studentInitial = (student && student.name)
     ? student.name.charAt(0).toUpperCase()
-    : (studentEmail ? studentEmail.charAt(0).toUpperCase() : '?');
+    : (studentEmail ? studentEmail.charAt(0).toUpperCase() : '');
 
   return (
     <div style={{ display: 'flex' }}>
@@ -264,7 +267,7 @@ var ExamPortal = function (props) {
             <Row className="align-items-center">
               <Col md={6}>
                 <h5>Enter Your Exam Code</h5>
-                <p>Eligible students receive a unique exam code via email ({studentEmail || 'your registered email'}). Enter it below to start your exam.</p>
+                <p>Eligible students receive a unique exam code via email ({studentEmail}). Enter it below to start your exam.</p>
               </Col>
               <Col md={6}>
                 <Form onSubmit={handleEnterExam}>
@@ -277,7 +280,7 @@ var ExamPortal = function (props) {
                     <Button type="submit" className="btn-enter-exam">Enter</Button>
                   </div>
                   <small style={{ color: 'rgba(255,255,255,0.4)', marginTop: 8, display: 'block' }}>
-                    Check your email ({studentEmail || '...'}) for the exam code
+                    Check your email ({studentEmail}) for the exam code
                   </small>
                 </Form>
               </Col>
