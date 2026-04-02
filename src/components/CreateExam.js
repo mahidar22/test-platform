@@ -8,9 +8,9 @@ const CreateExam = ({ user, onLogout, addExam }) => {
 
   const [title, setTitle] = useState('');
   const [examCode, setExamCode] = useState('');
-  const [totalQuestions, setTotalQuestions] = useState('10');
-  const [optionsCount, setOptionsCount] = useState('4');
-  const [duration, setDuration] = useState('60');
+  const [totalQuestions, setTotalQuestions] = useState('');
+  const [optionsCount, setOptionsCount] = useState('');
+  const [duration, setDuration] = useState('');
   const [deadline, setDeadline] = useState('');
   const [pdfFile, setPdfFile] = useState(null);
   const [pdfFileName, setPdfFileName] = useState('');
@@ -22,8 +22,8 @@ const CreateExam = ({ user, onLogout, addExam }) => {
   const handleLogout = () => { onLogout(); navigate('/'); };
 
   // ── Parse values safely ──
-  const qCount = Math.max(1, Math.min(200, parseInt(totalQuestions) || 1));
-  const optNum = parseInt(optionsCount) || 4;
+  const qCount = Math.max(1, Math.min(200, parseInt(totalQuestions)));
+  const optNum = parseInt(optionsCount);
   const answeredCount = Object.keys(answerKey).length;
 
   const handleFileChange = (e) => {
@@ -50,7 +50,7 @@ const CreateExam = ({ user, onLogout, addExam }) => {
   const handleQuestionCountChange = (value) => {
     setTotalQuestions(value);
     // Clean up answer key: remove answers for questions that no longer exist
-    const newCount = Math.max(1, Math.min(200, parseInt(value) || 1));
+    const newCount = Math.max(1, Math.min(200, parseInt(value)));
     const updatedKey = {};
     Object.keys(answerKey).forEach((key) => {
       const idx = parseInt(key);
@@ -65,7 +65,7 @@ const CreateExam = ({ user, onLogout, addExam }) => {
   const handleOptionsCountChange = (value) => {
     setOptionsCount(value);
     // Clear answers that are out of range with new option count
-    const newOptCount = parseInt(value) || 4;
+    const newOptCount = parseInt(value);
     const updatedKey = {};
     Object.keys(answerKey).forEach((key) => {
       if (answerKey[key] < newOptCount) {
@@ -124,7 +124,7 @@ const CreateExam = ({ user, onLogout, addExam }) => {
     if (!examCode) { setError('Please generate an exam code by clicking the Generate button.'); return; }
     if (!pdfFile) { setError('Please upload a PDF question paper.'); return; }
     if (qCount < 1) { setError('Number of questions must be at least 1.'); return; }
-    if ((parseInt(duration) || 0) < 1) { setError('Duration must be at least 1 minute.'); return; }
+    if ((parseInt(duration)) < 1) { setError('Duration must be at least 1 minute.'); return; }
     if (!deadline) { setError('Please set a deadline for the exam.'); return; }
 
     if (answeredCount < qCount) {
@@ -155,9 +155,9 @@ const CreateExam = ({ user, onLogout, addExam }) => {
 
     setTitle('');
     setExamCode('');
-    setTotalQuestions('10');
-    setOptionsCount('4');
-    setDuration('60');
+    setTotalQuestions('');
+    setOptionsCount('');
+    setDuration('');
     setDeadline('');
     setPdfFile(null);
     setPdfFileName('');
@@ -177,9 +177,11 @@ const CreateExam = ({ user, onLogout, addExam }) => {
           <div className="user-info">
             <div>
               <div style={{ fontWeight: 600, fontSize: 14, color: '#1a1a2e' }}>{user?.name}</div>
-              <div style={{ fontSize: 12, color: '#888' }}>Administrator</div>
+              <div style={{ fontSize: 12, color: '#888' }}>{user?.role}</div>
             </div>
-            <div className="user-avatar" style={{ background: 'linear-gradient(135deg, #e53935, #c62828)' }}>A</div>
+            <div className="user-avatar" style={{ background: 'linear-gradient(135deg, #e53935, #c62828)' }}>
+              {user?.name?.charAt(0)?.toUpperCase()}
+            </div>
           </div>
         </div>
 
@@ -279,6 +281,7 @@ const CreateExam = ({ user, onLogout, addExam }) => {
                   <Form.Select value={optionsCount}
                     onChange={(e) => handleOptionsCountChange(e.target.value)}
                     className="form-input-custom">
+                    <option value="">Select options count</option>
                     <option value="2">2 — True / False</option>
                     <option value="3">3 — A, B, C</option>
                     <option value="4">4 — A, B, C, D</option>
