@@ -2,45 +2,20 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Modal } from 'react-bootstrap';
 
-const QUESTION_BANKS = {
-  CS401: {
-    title: 'Operating Systems',
-    duration: 90 * 60,
-    answerKey: { 0: 2, 1: 1, 2: 1, 3: 2, 4: 2, 5: 1, 6: 2, 7: 1, 8: 1, 9: 1 },
-    questions: [
-      { id: 1, text: 'Which of the following is NOT a function of an operating system?', options: ['Memory management', 'Network management', 'Compiler design', 'Process management'] },
-      { id: 2, text: 'What is the main purpose of the kernel?', options: ['To provide a user interface', 'To manage hardware resources', 'To compile programs', 'To browse the internet'] },
-      { id: 3, text: 'Which scheduling algorithm gives minimum average waiting time?', options: ['FCFS', 'SJF', 'Round Robin', 'Priority Scheduling'] },
-      { id: 4, text: 'Deadlock requires which conditions?', options: ['Mutual exclusion only', 'Hold and wait only', 'All four conditions', 'None'] },
-      { id: 5, text: 'Which page replacement is optimal?', options: ['FIFO', 'LRU', "Belady's Optimal", 'Clock'] },
-      { id: 6, text: 'What is thrashing?', options: ['High CPU use', 'More paging than executing', 'All processes ready', 'Deadlock'] },
-      { id: 7, text: 'Which is non-preemptive?', options: ['Round Robin', 'SRTF', 'FCFS', 'Multilevel Queue'] },
-      { id: 8, text: "Banker's algorithm is for:", options: ['Detection', 'Avoidance', 'Prevention', 'Allocation'] },
-      { id: 9, text: 'What is a semaphore?', options: ['CPU register', 'Sync tool', 'Memory type', 'Scheduling algo'] },
-      { id: 10, text: 'External fragmentation in?', options: ['Paging', 'Contiguous', 'Seg+Paging', 'Virtual'] },
-    ],
-  },
-};
-
-const LEGACY_CODES = { 'CS401-XK9M': 'CS401' };
-
-const ExamDashboard = ({ student, customExams = [] }) => {
+const ExamDashboard = ({ student, customExams }) => {
   const { examCode } = useParams();
   const navigate = useNavigate();
 
-  const legacySubject = LEGACY_CODES[examCode];
-  const legacyData = legacySubject ? QUESTION_BANKS[legacySubject] : null;
-  const customExam = customExams.find((e) => e.examCode === examCode);
+  const customExam = customExams?.find((e) => e.examCode === examCode);
 
-  const isPdfExam = !!customExam;
-  const examTitle = isPdfExam ? customExam.title : legacyData?.title || '';
-  const totalQ = isPdfExam ? customExam.totalQuestions : legacyData?.questions?.length || 0;
-  const optCount = isPdfExam ? customExam.optionsCount : 4;
-  const examDuration = isPdfExam ? customExam.duration * 60 : legacyData?.duration || 0;
+  const examTitle = customExam?.title;
+  const totalQ = customExam?.totalQuestions;
+  const optCount = customExam?.optionsCount;
+  const examDuration = customExam?.duration ? customExam.duration * 60 : 0;
 
   const isTrueFalse = parseInt(optCount) === 2;
 
-  const correctAnswerKey = isPdfExam ? (customExam.answerKey || {}) : (legacyData?.answerKey || {});
+  const correctAnswerKey = customExam?.answerKey;
 
   const [currentQ, setCurrentQ] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -111,7 +86,7 @@ const ExamDashboard = ({ student, customExams = [] }) => {
   }, [submitted, examTerminated, handleForceSubmit]);
 
   useEffect(() => {
-    if (submitted || examTerminated || (!legacyData && !customExam)) return;
+    if (submitted || examTerminated || !customExam) return;
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -123,9 +98,9 @@ const ExamDashboard = ({ student, customExams = [] }) => {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [submitted, examTerminated, legacyData, customExam, handleAutoSubmit]);
+  }, [submitted, examTerminated, customExam, handleAutoSubmit]);
 
-  if (!legacyData && !customExam) {
+  if (!customExam) {
     return (
       <div style={{ textAlign: 'center', padding: 80 }}>
         <h3>Exam Not Found</h3>
@@ -154,13 +129,6 @@ const ExamDashboard = ({ student, customExams = [] }) => {
     }
   };
 
-  const goNext = () => {
-    if (currentQ < totalQ - 1) setCurrentQ(currentQ + 1);
-  };
-  const goPrev = () => {
-    if (currentQ > 0) setCurrentQ(currentQ - 1);
-  };
-
   const attemptedCount = Object.keys(answers).length;
   const unanswered = totalQ - attemptedCount;
 
@@ -187,37 +155,6 @@ const ExamDashboard = ({ student, customExams = [] }) => {
     return 'transparent';
   };
 
-  const renderQuestionOptions = () => {
-    if (!legacyData) return null;
-    const opts = legacyData.questions[currentQ].options;
-
-    if (isTrueFalse) {
-      return (
-        <div className="question-options-display">
-          {opts.map((opt, idx) => (
-            <div key={idx} className="tf-option-item">
-              <span className={`tf-option-badge ${idx === 0 ? 'tf-badge-true' : 'tf-badge-false'}`}>
-                {idx === 0 ? 'T' : 'F'}
-              </span>
-              <span className="tf-option-text">{opt}</span>
-            </div>
-          ))}
-        </div>
-      );
-    }
-
-    return (
-      <div className="question-options-display">
-        {opts.map((opt, idx) => (
-          <div key={idx} className="option-display-item">
-            <span className="option-display-label">{getOptionLabel(idx)}</span>
-            <span className="option-display-text">{opt}</span>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
   return (
     <div style={{ height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       {/* Header Bar */}
@@ -233,33 +170,13 @@ const ExamDashboard = ({ student, customExams = [] }) => {
       <div className="exam-body">
         {/* Question Panel (Left) */}
         <div className="question-panel">
-          {isPdfExam ? (
-            <div className="pdf-viewer-container">
-              <div className="pdf-viewer-header">
-                <span>Question Paper — {examTitle}</span>
-                <span className="q-counter">{attemptedCount} of {totalQ} Answered</span>
-              </div>
-              <iframe src={customExam.pdfUrl} title="Question Paper PDF" className="pdf-iframe" />
+          <div className="pdf-viewer-container">
+            <div className="pdf-viewer-header">
+              <span>Question Paper — {examTitle}</span>
+              <span className="q-counter">{attemptedCount} of {totalQ} Answered</span>
             </div>
-          ) : (
-            <>
-              <div className="q-header">
-                <h5>Question {currentQ + 1} of {totalQ}</h5>
-                <span className="q-counter">{attemptedCount} of {totalQ} Answered</span>
-              </div>
-              <div className="question-number-badge">Q{currentQ + 1}</div>
-              <div className="question-text">{legacyData.questions[currentQ].text}</div>
-              {renderQuestionOptions()}
-              <div className="question-nav-btns">
-                <button className="btn-q-nav btn-prev" onClick={goPrev} disabled={currentQ === 0}>
-                  ← Previous
-                </button>
-                <button className="btn-q-nav btn-next" onClick={goNext} disabled={currentQ === totalQ - 1}>
-                  Next →
-                </button>
-              </div>
-            </>
-          )}
+            <iframe src={customExam.pdfUrl} title="Question Paper PDF" className="pdf-iframe" />
+          </div>
         </div>
 
         {/* OMR Panel (Right) */}
