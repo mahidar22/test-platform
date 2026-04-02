@@ -64,15 +64,15 @@ const AdminSidebar = ({ active, onLogout }) => {
 // ══════════════════════════════════════════════════════════════
 // ADMIN DASHBOARD HOME
 // ══════════════════════════════════════════════════════════════
-const AdminDashboard = ({ admin, onLogout, customExams = [], examResults = [] }) => {
+const AdminDashboard = ({ admin, onLogout, customExams, examResults }) => {
   const navigate = useNavigate();
 
   const handleLogout = () => { onLogout(); navigate('/'); };
 
-  const adminEmail = admin?.email || 'admin@examportal.com';
-  const adminInitial = admin?.name ? admin.name.charAt(0).toUpperCase() : 'A';
+  const adminEmail = admin?.email;
+  const adminInitial = admin?.name ? admin.name.charAt(0).toUpperCase() : '';
 
-  const activeExamsCount = customExams.filter(e => {
+  const activeExamsCount = customExams?.filter(e => {
     if (!e.deadline) return true;
     return new Date(e.deadline) > new Date();
   }).length;
@@ -94,7 +94,7 @@ const AdminDashboard = ({ admin, onLogout, customExams = [], examResults = [] })
             <div className="stat-card">
               <div className="stat-icon" style={{ background: '#E3F2FD' }}>📝</div>
               <h5>Total Exams</h5>
-              <h2>{customExams.length}</h2>
+              <h2>{customExams?.length}</h2>
             </div>
           </Col>
           <Col md={6} lg={3}>
@@ -108,7 +108,7 @@ const AdminDashboard = ({ admin, onLogout, customExams = [], examResults = [] })
             <div className="stat-card">
               <div className="stat-icon" style={{ background: '#FFF3E0' }}>👥</div>
               <h5>Submissions</h5>
-              <h2>{examResults.length}</h2>
+              <h2>{examResults?.length}</h2>
             </div>
           </Col>
           <Col md={6} lg={3}>
@@ -167,7 +167,7 @@ const AdminDashboard = ({ admin, onLogout, customExams = [], examResults = [] })
           </Col>
         </Row>
 
-        {customExams.length > 0 && (
+        {customExams?.length > 0 && (
           <div style={{ marginTop: 32 }}>
             <h5 style={{ color: '#2D0040', fontWeight: 700, marginBottom: 16 }}>Recent Exams</h5>
             <div className="create-exam-card">
@@ -215,16 +215,16 @@ const AdminDashboard = ({ admin, onLogout, customExams = [], examResults = [] })
 // ══════════════════════════════════════════════════════════════
 // CREATE EXAM PAGE (with OK button for deadline)
 // ══════════════════════════════════════════════════════════════
-const CreateExam = ({ admin, onLogout, onCreateExam, settings = {} }) => {
+const CreateExam = ({ admin, onLogout, onCreateExam, settings }) => {
   const navigate = useNavigate();
 
-  const defaultOptions = settings.defaultOptionsCount || 4;
-  const shuffleEnabled = settings.shuffleQuestions || false;
+  const defaultOptions = settings?.defaultOptionsCount;
+  const shuffleEnabled = settings?.shuffleQuestions;
 
   const [title, setTitle] = useState('');
-  const [totalQuestions, setTotalQuestions] = useState(10);
+  const [totalQuestions, setTotalQuestions] = useState('');
   const [optionsCount, setOptionsCount] = useState(defaultOptions);
-  const [duration, setDuration] = useState(30);
+  const [duration, setDuration] = useState('');
 
   // Deadline with OK button
   const [deadlineInput, setDeadlineInput] = useState('');
@@ -241,8 +241,8 @@ const CreateExam = ({ admin, onLogout, onCreateExam, settings = {} }) => {
 
   const handleLogout = () => { onLogout(); navigate('/'); };
 
-  const adminEmail = admin?.email || 'admin@examportal.com';
-  const adminInitial = admin?.name ? admin.name.charAt(0).toUpperCase() : 'A';
+  const adminEmail = admin?.email;
+  const adminInitial = admin?.name ? admin.name.charAt(0).toUpperCase() : '';
 
   const generateExamCode = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -329,8 +329,8 @@ const CreateExam = ({ admin, onLogout, onCreateExam, settings = {} }) => {
   };
 
   const resetForm = () => {
-    setTitle(''); setTotalQuestions(10); setOptionsCount(defaultOptions);
-    setDuration(30); setDeadlineInput(''); setConfirmedDeadline('');
+    setTitle(''); setTotalQuestions(''); setOptionsCount(defaultOptions);
+    setDuration(''); setDeadlineInput(''); setConfirmedDeadline('');
     setPdfFile(null); setPdfUrl(''); setAnswerKey({});
     setShowAnswerKey(false); setExamCode(''); setSuccess(false); setError('');
   };
@@ -673,15 +673,15 @@ const CreateExam = ({ admin, onLogout, onCreateExam, settings = {} }) => {
 // ══════════════════════════════════════════════════════════════
 // MANAGE EXAMS PAGE
 // ══════════════════════════════════════════════════════════════
-const ManageExams = ({ admin, onLogout, customExams = [], onDeleteExam }) => {
+const ManageExams = ({ admin, onLogout, customExams, onDeleteExam }) => {
   const navigate = useNavigate();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [examToDelete, setExamToDelete] = useState(null);
 
   const handleLogout = () => { onLogout(); navigate('/'); };
 
-  const adminEmail = admin?.email || 'admin@examportal.com';
-  const adminInitial = admin?.name ? admin.name.charAt(0).toUpperCase() : 'A';
+  const adminEmail = admin?.email;
+  const adminInitial = admin?.name ? admin.name.charAt(0).toUpperCase() : '';
 
   const confirmDelete = () => {
     if (examToDelete && onDeleteExam) onDeleteExam(examToDelete.id);
@@ -701,7 +701,7 @@ const ManageExams = ({ admin, onLogout, customExams = [], onDeleteExam }) => {
           </div>
         </div>
 
-        {customExams.length === 0 ? (
+        {!customExams?.length ? (
           <div className="create-exam-card" style={{ textAlign: 'center', padding: 48 }}>
             <div style={{ fontSize: 64, marginBottom: 16 }}>📝</div>
             <h4 style={{ color: '#2D0040', fontWeight: 700, marginBottom: 8 }}>No Exams Created Yet</h4>
@@ -794,12 +794,12 @@ const ManageExams = ({ admin, onLogout, customExams = [], onDeleteExam }) => {
 // ══════════════════════════════════════════════════════════════
 // VIEW RESULTS PAGE
 // ══════════════════════════════════════════════════════════════
-const ViewResults = ({ admin, onLogout, examResults = [] }) => {
+const ViewResults = ({ admin, onLogout, examResults }) => {
   const navigate = useNavigate();
   const handleLogout = () => { onLogout(); navigate('/'); };
 
-  const adminEmail = admin?.email || 'admin@examportal.com';
-  const adminInitial = admin?.name ? admin.name.charAt(0).toUpperCase() : 'A';
+  const adminEmail = admin?.email;
+  const adminInitial = admin?.name ? admin.name.charAt(0).toUpperCase() : '';
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
@@ -813,7 +813,7 @@ const ViewResults = ({ admin, onLogout, examResults = [] }) => {
           </div>
         </div>
 
-        {examResults.length === 0 ? (
+        {!examResults?.length ? (
           <div className="create-exam-card" style={{ textAlign: 'center', padding: 48 }}>
             <div style={{ fontSize: 64, marginBottom: 16 }}>📊</div>
             <h4 style={{ color: '#2D0040', fontWeight: 700, marginBottom: 8 }}>No Results Yet</h4>
@@ -872,11 +872,11 @@ const AdminSettings = ({ admin, onLogout, settings, onUpdateSettings }) => {
   const navigate = useNavigate();
   const handleLogout = () => { onLogout(); navigate('/'); };
 
-  const adminEmail = admin?.email || 'admin@examportal.com';
-  const adminInitial = admin?.name ? admin.name.charAt(0).toUpperCase() : 'A';
+  const adminEmail = admin?.email;
+  const adminInitial = admin?.name ? admin.name.charAt(0).toUpperCase() : '';
 
-  const [defaultOptionsCount, setDefaultOptionsCount] = useState(settings.defaultOptionsCount || 4);
-  const [shuffleQuestions, setShuffleQuestions] = useState(settings.shuffleQuestions || false);
+  const [defaultOptionsCount, setDefaultOptionsCount] = useState(settings?.defaultOptionsCount);
+  const [shuffleQuestions, setShuffleQuestions] = useState(settings?.shuffleQuestions);
   const [saved, setSaved] = useState(false);
 
   const handleSave = () => {
