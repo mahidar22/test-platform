@@ -1,10 +1,6 @@
 import React, { useState } from 'react';
 import { Form, Button, Alert, Spinner } from 'react-bootstrap';
 
-const VALID_CREDENTIALS = [
-  { password: 'admin123', name: 'Administrator', role: 'admin', email: 'admin@examportal.com' },
-  { password: 'pass123', name: 'king marcus', rollNo: '21CS101', role: 'student', email: 'mahidar@gmail.com' },
-];
 
 const LoginPage = ({ onLogin }) => {
   const [email, setEmail] = useState('');
